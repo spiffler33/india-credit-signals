@@ -1,0 +1,81 @@
+# WHY THIS: Single source of truth for all project metadata and dependencies.
+# uv reads this file to create a virtual environment and install everything.
+
+[project]
+name = "india-credit-signals"
+version = "0.1.0"
+description = "Fine-tuned LLM for extracting credit risk deterioration signals from news for Indian NBFCs"
+readme = "PLAN.md"
+requires-python = ">=3.11"
+dependencies = [
+    # --- HuggingFace ML ecosystem ---
+    # transformers: The core library for loading and fine-tuning LLMs (like Bloomberg Terminal for models)
+    # Pinned <5 to stay compatible with torch 2.2.2 on macOS Intel
+    "transformers>=4.40.0,<5",
+    # peft: Parameter-Efficient Fine-Tuning — implements LoRA, QLoRA, etc.
+    "peft>=0.10.0,<0.14",
+    # datasets: HuggingFace's data loading/processing library (standardized data pipeline)
+    "datasets>=2.19.0,<3",
+    # accelerate: Handles multi-GPU training, mixed precision — abstracts hardware complexity
+    "accelerate>=0.30.0,<1",
+    # numpy: Pinned <2 for torch 2.2.2 binary compat (torch was compiled against numpy 1.x)
+    "numpy<2",
+    # --- Data & Scraping ---
+    # httpx: Modern async HTTP client (better than requests — supports async for parallel scraping)
+    "httpx>=0.27.0",
+    # tenacity: Retry logic for flaky network requests (scrapers WILL fail, this handles retries)
+    "tenacity>=8.2.0",
+    # pandas: Data manipulation (you know this from finance — DataFrames)
+    "pandas>=2.2.0",
+    # polars: Faster DataFrame library for large datasets (10-100x faster than pandas on big data)
+    # [rtcompat] = runtime-compatible build for CPUs without AVX2 (like older Intel Macs)
+    "polars[rtcompat]>=0.20.0",
+
+    # --- API & Serving ---
+    # fastapi: Modern Python web framework for the API backend
+    "fastapi>=0.111.0",
+    # uvicorn: ASGI server that runs FastAPI (like the engine under the API hood)
+    "uvicorn>=0.29.0",
+
+    # --- Config & Logging ---
+    # pyyaml: Reads YAML config files (human-readable config, not hardcoded values)
+    "pyyaml>=6.0",
+    # loguru: Better logging than Python's built-in (structured, colored, easy to use)
+    "loguru>=0.7.0",
+
+    # --- Utilities ---
+    # torch: PyTorch — the deep learning framework everything else is built on
+    # Pinned ==2.2.2 — last version with macOS Intel (x86_64) wheels.
+    # On cloud GPU machines (Colab/Lambda), override with latest torch.
+    "torch==2.2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "pyright>=1.1.360",
+]
+# GPU-only deps — install on Colab/Lambda with: uv sync --extra gpu
+gpu = [
+    # bitsandbytes: Quantization for QLoRA (compresses 28GB model to ~5GB)
+    "bitsandbytes>=0.43.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# WHY THIS: Our code lives in src/ not india_credit_signals/.
+# This tells the build tool where to find our Python packages.
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

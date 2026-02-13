@@ -1,0 +1,47 @@
+# WHY THIS: Central project configuration. All scripts read from here
+# instead of hardcoding values. Change once, applies everywhere.
+# Like a portfolio's master parameter sheet.
+
+project:
+  name: "india-credit-signals"
+  version: "0.1.0"
+  phase: 0  # Current phase — update as we progress
+
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  models: "data/models"
+  configs: "configs"
+
+# Target entities — will be expanded in Phase 1
+entities:
+  seed_nbfcs:
+    - "IL&FS"
+    - "DHFL"
+    - "Altico Capital"
+    - "Reliance Capital"
+    - "SREI Infrastructure"
+
+# Rating agencies we'll scrape
+rating_agencies:
+  - name: "CRISIL"
+    url: "https://www.crisil.com/en/home/our-analysis/ratings/rating-list.html"
+  - name: "ICRA"
+    url: "https://www.icra.in/Rationale/Search"
+  - name: "CARE"
+    url: "https://www.careedge.in/ratings/rating-rationale"
+  - name: "India Ratings"
+    url: "https://www.indiaratings.co.in/PressRelease"
+
+# Model training defaults (Phase 2)
+training:
+  base_model: "Qwen/Qwen2.5-7B-Instruct"
+  fallback_model: "meta-llama/Llama-3.1-8B-Instruct"
+  lora:
+    rank: 16
+    alpha: 32
+    target_modules: ["q_proj", "v_proj"]
+  learning_rate: 0.0002
+  batch_size: 4
+  gradient_accumulation_steps: 8
+  epochs: 3
