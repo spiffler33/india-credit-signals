@@ -48,6 +48,12 @@ Building a fine-tuned LLM to extract credit risk deterioration signals from news
 - Output style rules: @.claude/OUTPUT_STYLE.md
 - Research briefing: @research/EM_Credit_Risk_LLM_Briefing.docx
 
+## Environment Split
+- **Local Mac (8GB M1):** Code editing, data scraping, git, dashboard dev — no GPU work
+- **Google Colab Pro:** Model inference, training, anything needing GPU memory
+- **GitHub:** `spiffler33/india-credit-signals` (private) — bridge between local and Colab
+- Local uses `uv` for deps; Colab uses `pip` (Colab's pre-built env conflicts with uv venvs)
+
 ## Common Commands
 ```bash
 # Run tests
@@ -62,9 +68,9 @@ cd src/dashboard && npm run dev
 # Run a data pipeline
 python -m src.data.scrape_gdelt --config configs/gdelt.yaml
 
-# Run model inference
+# Run model inference (on Colab, not local)
 python -m src.signals.predict --model data/models/latest --input data/processed/test.jsonl
 ```
 
 ## Current Phase
-Phase 0 — Foundation. Clone FinRLlama, understand the training pipeline, set up dev environment.
+Phase 0.1 — Foundation. FinRLlama cloned and analyzed. Running baseline inference on Colab next.

@@ -13,13 +13,15 @@ A fine-tuned LLM that extracts credit deterioration signals from English-languag
 ## Phase 0: Foundation (Days 1-2)
 **Goal:** Run someone else's fine-tuning pipeline end-to-end. Understand every step.
 
-### 0.1 Clone & Run FinRLlama
+### 0.1 Clone & Run FinRLlama ✅ DONE
 ```
 Repo: https://github.com/Arnav-Gr0ver/ICAIF_FinRL-2024
-Model: https://huggingface.co/SesameStreet/FinRLlama-3.2-3B-Instruct
+Model: https://huggingface.co/Arnav-Gr0ver/FinRLlama-3.2-3B-Instruct
 ```
-- Clone repo, read every file, understand the RLMF training loop
-- Run inference on the pre-trained model with sample financial news
+- ✅ Cloned repo, read every file, documented the full pipeline architecture
+- ⏳ Run inference on Colab (Qwen baseline + FinRLlama comparison)
+  - Notebook: `notebooks/00_colab_setup_and_inference.ipynb`
+  - LLaMA access pending from Meta (needed for FinRLlama base model)
 - **Learning checkpoint:** You should be able to explain LoRA rank, learning rate schedules, and what RLMF does differently from standard SFT
 
 ### 0.2 Clone & Read FinGPT
@@ -31,10 +33,16 @@ Focus: FinGPT v3 series (LoRA fine-tuning on sentiment)
 - Understand how they structure training data (instruction format, labels)
 - **Learning checkpoint:** You should understand the difference between SFT, RLHF, and RLMF
 
-### 0.3 Set Up Development Environment
-- Python 3.11+, PyTorch, transformers, peft (for LoRA), datasets
-- GPU access: Colab Pro ($12/mo for A100) or Lambda Labs ($1.10/hr for A10G)
-- **IMPORTANT:** Don't buy expensive GPU time yet. Phase 0-2 run on CPU or free tier.
+### 0.3 Set Up Development Environment ✅ DONE
+- ✅ Python 3.12.10 (native ARM), PyTorch 2.10, transformers 4.57, peft 0.18
+- ✅ Colab Pro ($12/mo) for GPU work (A100/T4)
+- ✅ GitHub repo: `spiffler33/india-credit-signals` (private)
+
+**Environment split:**
+| Task | Where |
+|------|-------|
+| Code editing, data scraping, git | Local Mac (Claude Code) |
+| Model inference, training | Google Colab (GPU) |
 
 **Discuss in Claude Chat (not Code):**
 - Review your understanding of LoRA, RLMF, SFT after reading the repos

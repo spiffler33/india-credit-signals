@@ -22,6 +22,11 @@
 ## Decision 6: Adani Group as Phase 2 Extension
 **Why:** Tests conglomerate-level contagion (within a group's entities) vs sector-level contagion (across NBFCs). Hindenburg report → DoJ indictment → TotalEnergies pullout is a rich news-driven credit event cascade with abundant English-language data.
 
+## Decision 7: Colab Pro over Local Mac for GPU Work
+**Why:** 8GB M1 Mac can't fit 3B+ models in memory for inference (unified memory shared with OS, MPS has per-tensor 4GB limit). Colab Pro ($12/mo) gives A100 with 40GB VRAM. Local Mac is kept for code editing, data scraping, and dashboard dev — no GPU work.
+
+**Tried and failed locally:** fp16 on MPS (warmup allocation rejected), fp32 on CPU (model memory-mapped from SSD, unusably slow). The right tool for the right job.
+
 ## Key People to Follow
 - **Xiao-Yang Liu** (Columbia/SecureFinAI Lab) — FinRL/FinGPT creator, runs all contests
 - **Muhammed Golec** — Systematic review of 60 LLM credit risk papers, identified gaps
