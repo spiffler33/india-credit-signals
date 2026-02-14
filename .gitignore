@@ -19,9 +19,15 @@ wandb/
 *.ckpt
 *.safetensors
 
+# Reference repos — cloned for study, not our code
+research/FinRLlama/
+
 # OS files
 .DS_Store
 
 # IDE
 .vscode/
 .idea/
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json

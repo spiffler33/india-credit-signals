@@ -1,25 +1,25 @@
 # WHY THIS: Single source of truth for all project metadata and dependencies.
 # uv reads this file to create a virtual environment and install everything.
+# All Rosetta-era version pins removed — now using native ARM Python on M1.
 
 [project]
 name = "india-credit-signals"
 version = "0.1.0"
 description = "Fine-tuned LLM for extracting credit risk deterioration signals from news for Indian NBFCs"
 readme = "PLAN.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     # --- HuggingFace ML ecosystem ---
     # transformers: The core library for loading and fine-tuning LLMs (like Bloomberg Terminal for models)
-    # Pinned <5 to stay compatible with torch 2.2.2 on macOS Intel
-    "transformers>=4.40.0,<5",
+    "transformers>=4.48.0",
     # peft: Parameter-Efficient Fine-Tuning — implements LoRA, QLoRA, etc.
-    "peft>=0.10.0,<0.14",
+    "peft>=0.14.0",
     # datasets: HuggingFace's data loading/processing library (standardized data pipeline)
-    "datasets>=2.19.0,<3",
+    "datasets>=3.0.0",
     # accelerate: Handles multi-GPU training, mixed precision — abstracts hardware complexity
-    "accelerate>=0.30.0,<1",
-    # numpy: Pinned <2 for torch 2.2.2 binary compat (torch was compiled against numpy 1.x)
-    "numpy<2",
+    "accelerate>=1.0.0",
+    # numpy: No longer pinned — ARM torch works with numpy 2.x
+    "numpy>=2.0",
     # --- Data & Scraping ---
     # httpx: Modern async HTTP client (better than requests — supports async for parallel scraping)
     "httpx>=0.27.0",
@@ -28,12 +28,12 @@ dependencies = [
     # pandas: Data manipulation (you know this from finance — DataFrames)
     "pandas>=2.2.0",
     # polars: Faster DataFrame library for large datasets (10-100x faster than pandas on big data)
-    # [rtcompat] = runtime-compatible build for CPUs without AVX2 (like older Intel Macs)
-    "polars[rtcompat]>=0.20.0",
+    # No [rtcompat] needed — ARM Python has native wheels with full SIMD support
+    "polars>=1.0.0",
 
     # --- API & Serving ---
     # fastapi: Modern Python web framework for the API backend
-    "fastapi>=0.111.0",
+    "fastapi>=0.115.0",
     # uvicorn: ASGI server that runs FastAPI (like the engine under the API hood)
     "uvicorn>=0.29.0",
 
@@ -45,9 +45,8 @@ dependencies = [
 
     # --- Utilities ---
     # torch: PyTorch — the deep learning framework everything else is built on
-    # Pinned ==2.2.2 — last version with macOS Intel (x86_64) wheels.
-    # On cloud GPU machines (Colab/Lambda), override with latest torch.
-    "torch==2.2.2",
+    # No pin needed — latest torch has excellent M1 MPS support
+    "torch>=2.5.0",
 ]
 
 [project.optional-dependencies]
