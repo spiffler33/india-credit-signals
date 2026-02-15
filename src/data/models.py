@@ -50,17 +50,20 @@ class RatingAction:
     """A single credit rating action by an agency on an entity.
 
     This is the atomic unit of our ground truth dataset. Each row in
-    seed_rating_actions.csv becomes one of these.
+    rating_actions_sourced.csv becomes one of these. Data sourced from
+    SEBI disclosures via CRISIL/ICRA scrapers + manual curation for
+    CARE/India Ratings/Brickwork/Acuite.
     """
     entity: str                    # Short name (e.g., "DHFL")
-    agency: str                    # Rating agency (e.g., "CRISIL")
+    entity_full_name: str          # Legal name (e.g., "Dewan Housing Finance Corporation Limited")
+    agency: str                    # Rating agency (e.g., "CRISIL", "ICRA", "CARE", etc.)
     date: date                     # Date of rating action
     action_type: ActionType        # What happened (downgrade, default, etc.)
-    from_rating: str               # Previous rating (e.g., "AA+")
-    to_rating: str                 # New rating (e.g., "D")
+    from_rating: str               # Previous rating in agency-native scale (e.g., "[ICRA] AA+")
+    to_rating: str                 # New rating in agency-native scale (e.g., "[ICRA] D")
+    instrument_type: str = ""      # What was rated (NCD, CP, bank facilities, etc.)
     rationale_url: str = ""        # URL to agency's rationale document
-    notes: str = ""                # Free-text context
-    source: str = "seed"           # "seed" or "scraped" — tracks data provenance
+    notes: str = ""                # Free-text context / source provenance
 
     @classmethod
     def from_csv_row(cls, row: dict[str, str]) -> Self:
@@ -73,28 +76,30 @@ class RatingAction:
         """
         return cls(
             entity=row["entity"].strip(),
+            entity_full_name=row.get("entity_full_name", "").strip(),
             agency=row["agency"].strip(),
             date=datetime.strptime(row["date"].strip(), "%Y-%m-%d").date(),
             action_type=ActionType(row["action_type"].strip().lower()),
             from_rating=row.get("from_rating", "").strip(),
             to_rating=row.get("to_rating", "").strip(),
+            instrument_type=row.get("instrument_type", "").strip(),
             rationale_url=row.get("rationale_url", "").strip(),
             notes=row.get("notes", "").strip(),
-            source=row.get("source", "seed").strip(),
         )
 
     def to_dict(self) -> dict[str, str]:
         """Serialize to a flat dict for CSV writing."""
         return {
             "entity": self.entity,
+            "entity_full_name": self.entity_full_name,
             "agency": self.agency,
             "date": self.date.isoformat(),
             "action_type": self.action_type.value,
             "from_rating": self.from_rating,
             "to_rating": self.to_rating,
+            "instrument_type": self.instrument_type,
             "rationale_url": self.rationale_url,
             "notes": self.notes,
-            "source": self.source,
         }
 
 
@@ -139,8 +144,8 @@ def write_rating_actions_csv(actions: list[RatingAction], path: Path) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
-        "entity", "agency", "date", "action_type",
-        "from_rating", "to_rating", "rationale_url", "notes", "source",
+        "entity", "entity_full_name", "agency", "date", "action_type",
+        "from_rating", "to_rating", "instrument_type", "rationale_url", "notes",
     ]
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
