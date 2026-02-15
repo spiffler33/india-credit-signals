@@ -5,7 +5,7 @@
 project:
   name: "india-credit-signals"
   version: "0.1.0"
-  phase: 0  # Current phase — update as we progress
+  phase: 1  # Current phase — Phase 1: Data Collection
 
 paths:
   data_raw: "data/raw"

@@ -25,6 +25,10 @@ dependencies = [
     "httpx>=0.27.0",
     # tenacity: Retry logic for flaky network requests (scrapers WILL fail, this handles retries)
     "tenacity>=8.2.0",
+    # beautifulsoup4: HTML parsing for scraping rating agency pages
+    "beautifulsoup4>=4.12.0",
+    # lxml: Fast HTML/XML parser backend — BS4 uses it under the hood for speed
+    "lxml>=5.0.0",
     # pandas: Data manipulation (you know this from finance — DataFrames)
     "pandas>=2.2.0",
     # polars: Faster DataFrame library for large datasets (10-100x faster than pandas on big data)

@@ -1,0 +1,67 @@
+entity,agency,date,action_type,from_rating,to_rating,rationale_url,notes,source
+IL&FS,ICRA,2018-09-17,downgrade,AAA,D,,IL&FS group defaults on CP and term loans; triggered NBFC liquidity crisis,seed
+IL&FS,CARE,2018-09-19,downgrade,AAA,D,,CARE also downgrades post-default; delayed action criticized by SEBI,seed
+IL&FS,CRISIL,2018-10-08,downgrade,AAA,D,,CRISIL downgrades entire IL&FS group entities to D,seed
+IL&FS Financial Services,ICRA,2018-09-17,downgrade,AAA,D,,IFIN subsidiary downgraded alongside parent,seed
+IL&FS Financial Services,CARE,2018-09-19,downgrade,AA+,D,,IFIN CP defaults trigger wider NBFC funding freeze,seed
+DHFL,CRISIL,2019-06-05,downgrade,AA,A4+,,Liquidity concerns after mutual fund exposure revealed; CP downgraded,seed
+DHFL,ICRA,2019-06-05,downgrade,AA,A4+,,Simultaneous downgrade by multiple agencies on same day,seed
+DHFL,CARE,2019-06-05,downgrade,AA,A4+,,CARE downgrades DHFL amid severe liquidity pressure,seed
+DHFL,CRISIL,2019-06-10,downgrade,A4+,D,,Missed CP repayment; rated default within a week of first downgrade,seed
+DHFL,ICRA,2019-06-10,downgrade,A4+,D,,DHFL defaults on commercial paper obligations,seed
+DHFL,CARE,2019-06-10,downgrade,A4+,D,,Default on CP; DHFL referred to NCLT eventually in 2021,seed
+DHFL,India Ratings,2019-06-06,downgrade,AA-,C,,India Ratings downgrades DHFL a day after CRISIL/ICRA,seed
+Reliance Capital,CARE,2019-10-03,downgrade,AA,A+,,Stressed asset quality and liquidity concerns at Reliance group NBFCs,seed
+Reliance Capital,ICRA,2019-10-17,downgrade,AA,A+,,Rating cut follows asset sale delays and subsidiary stress,seed
+Reliance Capital,CRISIL,2019-11-22,downgrade,A+,BBB-,,Further cuts as liquidity deteriorates sharply,seed
+Reliance Capital,CARE,2020-02-04,downgrade,A+,D,,Default on NCDs; referred to NCLT under IBC in Nov 2021,seed
+Reliance Capital,ICRA,2020-02-04,downgrade,A+,D,,Reliance Capital defaults on debt obligations,seed
+Reliance Home Finance,ICRA,2019-07-15,downgrade,AA-,A4,,Subsidiary contagion from Reliance Capital group stress,seed
+Reliance Home Finance,CRISIL,2019-08-20,downgrade,A,D,,RHFL defaults on repayment obligations,seed
+Altico Capital,ICRA,2019-10-01,downgrade,AA-,D,,Altico defaults on interest payment on ECB borrowings,seed
+Altico Capital,India Ratings,2019-10-01,downgrade,A+,D,,Small real estate NBFC defaults amid NBFC funding crisis,seed
+SREI Infrastructure Finance,ICRA,2019-12-19,outlook_negative,A+,A+,,Outlook revised negative; asset quality concerns in infra lending,seed
+SREI Infrastructure Finance,CARE,2020-03-15,downgrade,A+,BBB+,,COVID-19 lockdown worsens infra NBFC stress,seed
+SREI Infrastructure Finance,ICRA,2021-08-10,downgrade,BBB+,D,,SREI defaults; RBI supersedes board under Section 45-IE,seed
+SREI Infrastructure Finance,CARE,2021-10-04,downgrade,BBB,D,,Referred to NCLT for insolvency resolution,seed
+SREI Equipment Finance,ICRA,2021-08-10,downgrade,A,D,,SREI subsidiary defaults alongside parent,seed
+YES Bank,ICRA,2019-10-04,downgrade,AA,A1+,,Concerns over asset quality and capital adequacy; stock plunges,seed
+YES Bank,CARE,2019-10-09,downgrade,A+,A-,,Multiple rating cuts as NPAs balloon and deposits flee,seed
+YES Bank,CRISIL,2020-03-06,downgrade,A,D,,RBI imposes moratorium; AT1 bonds written down entirely,seed
+YES Bank,ICRA,2020-03-06,downgrade,BBB-,D,,Moratorium and reconstruction scheme announced by RBI,seed
+YES Bank,CARE,2020-03-06,downgrade,BBB,D,,YES Bank AT1 bondholders suffer total loss in restructuring,seed
+Indiabulls Housing Finance,ICRA,2019-07-09,outlook_negative,AAA,AAA,,Outlook negative amid sector contagion from IL&FS/DHFL crisis,seed
+Indiabulls Housing Finance,CRISIL,2019-09-18,downgrade,AAA,AA+,,First actual notch cut; funding costs rise significantly,seed
+Indiabulls Housing Finance,ICRA,2020-05-05,downgrade,AAA,AA,,Further cuts as HFC sector remains under stress post-COVID,seed
+PNB Housing Finance,ICRA,2019-08-14,outlook_negative,AAA,AAA,,Outlook negative; contagion from HFC sector crisis,seed
+PNB Housing Finance,CARE,2020-06-10,downgrade,AAA,AA+,,First notch cut; board governance issues and promoter concerns,seed
+LIC Housing Finance,ICRA,2019-09-30,outlook_negative,AAA,AAA,,Even strong HFCs face outlook pressure from sector contagion,seed
+Piramal Enterprises,CRISIL,2019-10-15,outlook_negative,AA,AA,,Contagion fears from real estate NBFC exposure,seed
+Piramal Enterprises,ICRA,2020-05-20,downgrade,AA,AA-,,COVID impact on wholesale lending book; restructuring concerns,seed
+Piramal Enterprises,CRISIL,2020-08-12,downgrade,AA,AA-,,Further pressure from real estate sector stress,seed
+Lakshmi Vilas Bank,ICRA,2019-09-27,downgrade,A-,BB+,,Severe capital adequacy shortfall; sub-investment grade,seed
+Lakshmi Vilas Bank,CARE,2019-11-15,downgrade,BB+,B,,Further deterioration; promoter capital infusion fails,seed
+Lakshmi Vilas Bank,ICRA,2020-09-29,downgrade,B,D,,RBI imposes moratorium; amalgamated with DBS India Nov 2020,seed
+PMC Bank,ICRA,2019-09-24,downgrade,A,D,,RBI restricts withdrawals after HDIL exposure fraud discovered,seed
+Bajaj Finance,CRISIL,2020-04-22,outlook_negative,AAA,AAA,,Even AAA-rated NBFCs face outlook pressure during COVID first wave,seed
+Bajaj Finance,CRISIL,2020-10-15,outlook_positive,AAA,AAA,,Outlook restored as collection efficiency recovers post-lockdown,seed
+Shriram Finance,ICRA,2020-06-15,outlook_negative,AA+,AA+,,COVID impact on vehicle finance collections; migrant worker disruption,seed
+Shriram Finance,CRISIL,2021-03-10,outlook_positive,AA+,AA+,,Recovery in vehicle sales and collections; outlook restored,seed
+Mahindra Finance,ICRA,2020-05-28,outlook_negative,AAA,AAA,,Rural NBFC faces collection challenges from lockdown disruption,seed
+Mahindra Finance,CARE,2021-07-12,outlook_positive,AAA,AAA,,Strong recovery in rural economy supports outlook restoration,seed
+Cholamandalam Investment,CRISIL,2020-04-30,outlook_negative,AA+,AA+,,COVID impact on vehicle and home equity lending books,seed
+Cholamandalam Investment,CRISIL,2021-06-20,upgrade,AA+,AAA,,Upgraded to AAA post-COVID; strong capital adequacy and diversification,seed
+L&T Finance,ICRA,2020-07-08,outlook_negative,AAA,AAA,,Infra book stress and COVID impact on retail lending,seed
+L&T Finance,CARE,2022-01-18,outlook_positive,AAA,AAA,,Pivot to retail lending and infra book rundown improves profile,seed
+Muthoot Finance,CRISIL,2020-08-05,upgrade,AA,AA+,,Gold loan NBFCs benefit as gold prices surge during COVID,seed
+Muthoot Finance,ICRA,2022-06-15,upgrade,AA+,AAA,,Consistent performance and strong asset quality earns top rating,seed
+Manappuram Finance,CARE,2020-09-10,upgrade,AA-,AA,,Gold price surge and strong collection rates drive upgrade,seed
+CreditAccess Grameen,ICRA,2020-04-14,outlook_negative,A+,A+,,Microfinance sector hit hardest by COVID lockdown; collections halt,seed
+CreditAccess Grameen,CARE,2021-09-20,outlook_positive,A+,A+,,Microfinance recovery as rural economy normalizes,seed
+Fusion Micro Finance,CARE,2020-05-18,outlook_negative,A-,A-,,New-age MFI faces collection disruption from COVID lockdown,seed
+Sundaram Finance,CRISIL,2020-06-10,outlook_negative,AAA,AAA,,Even strongest vehicle finance NBFC faces outlook revision,seed
+Sundaram Finance,CRISIL,2021-09-08,outlook_positive,AAA,AAA,,Full recovery; vehicle sales normalize by H1 FY22,seed
+IIFL Finance,ICRA,2020-07-22,outlook_negative,AA-,AA-,,Diversified NBFC faces wholesale book stress and COVID impact,seed
+IIFL Finance,CARE,2024-03-04,watchlist_negative,AA-,AA-,,RBI bars IIFL Finance gold loan business; supervisory concerns,seed
+JM Financial,ICRA,2020-06-25,outlook_negative,AA,AA,,Wholesale lending exposure to real estate creates stress,seed
+JM Financial,CARE,2024-03-14,watchlist_negative,AA,AA,,RBI restricts JM Financial ARC from loan acquisition,seed

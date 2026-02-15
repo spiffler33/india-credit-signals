@@ -1,0 +1,326 @@
+# WHY THIS: Master list of Indian NBFCs we track for credit signals.
+# Grouped by subsector because contagion propagates within subsectors —
+# a housing finance NBFC crisis (like DHFL) hits other HFCs harder than gold loan NBFCs.
+# Aliases are critical for fuzzy-matching entity names in news articles
+# (e.g., "Bajaj Finance Ltd" vs "Bajaj Finance" vs "BFL").
+
+# Date range for all data collection
+date_range:
+  start: "2016-01-01"
+  end: "2024-12-31"
+
+subsectors:
+
+  housing_finance:
+    - name: "DHFL"
+      full_name: "Dewan Housing Finance Corporation Limited"
+      aliases: ["DHFL", "Dewan Housing", "Dewan Housing Finance"]
+      bse_code: "511072"
+      nse_code: "DHFL"
+      status: "defaulted"  # NCLT resolution 2021
+
+    - name: "HDFC Ltd"
+      full_name: "Housing Development Finance Corporation Limited"
+      aliases: ["HDFC", "HDFC Ltd", "Housing Development Finance"]
+      bse_code: "500010"
+      nse_code: "HDFC"
+      status: "merged"  # Merged with HDFC Bank July 2023
+
+    - name: "LIC Housing Finance"
+      full_name: "LIC Housing Finance Limited"
+      aliases: ["LIC HFL", "LIC Housing", "LICHF"]
+      bse_code: "500253"
+      nse_code: "LICHSGFIN"
+      status: "active"
+
+    - name: "PNB Housing Finance"
+      full_name: "PNB Housing Finance Limited"
+      aliases: ["PNB Housing", "PNBHF", "PNB HFL"]
+      bse_code: "540173"
+      nse_code: "PNBHOUSING"
+      status: "active"
+
+    - name: "Can Fin Homes"
+      full_name: "Can Fin Homes Limited"
+      aliases: ["Can Fin", "CanFin Homes"]
+      bse_code: "511196"
+      nse_code: "CANFINHOME"
+      status: "active"
+
+    - name: "Indiabulls Housing Finance"
+      full_name: "Indiabulls Housing Finance Limited"
+      aliases: ["Indiabulls Housing", "IBHFL", "Indiabulls HFL"]
+      bse_code: "535789"
+      nse_code: "IBULHSGFIN"
+      status: "active"
+
+    - name: "Aavas Financiers"
+      full_name: "Aavas Financiers Limited"
+      aliases: ["Aavas", "Aavas Finance"]
+      bse_code: "541988"
+      nse_code: "AAVAS"
+      status: "active"
+
+    - name: "Aptus Value Housing"
+      full_name: "Aptus Value Housing Finance India Limited"
+      aliases: ["Aptus", "Aptus Housing"]
+      bse_code: "543335"
+      nse_code: "APTUS"
+      status: "active"
+
+    - name: "Home First Finance"
+      full_name: "Home First Finance Company India Limited"
+      aliases: ["HomeFirst", "Home First", "HFFC"]
+      bse_code: "543259"
+      nse_code: "HOMEFIRST"
+      status: "active"
+
+    - name: "Repco Home Finance"
+      full_name: "Repco Home Finance Limited"
+      aliases: ["Repco", "Repco Home"]
+      bse_code: "535322"
+      nse_code: "REPCOHOME"
+      status: "active"
+
+  infrastructure_finance:
+    - name: "IL&FS"
+      full_name: "Infrastructure Leasing & Financial Services Limited"
+      aliases: ["IL&FS", "ILFS", "IL and FS", "Infrastructure Leasing"]
+      bse_code: ""  # Unlisted
+      nse_code: ""
+      status: "defaulted"  # Sep 2018 collapse
+
+    - name: "IL&FS Financial Services"
+      full_name: "IL&FS Financial Services Limited"
+      aliases: ["IFIN", "IL&FS Financial", "ILFS Financial"]
+      bse_code: ""
+      nse_code: ""
+      status: "defaulted"
+
+    - name: "SREI Infrastructure Finance"
+      full_name: "SREI Infrastructure Finance Limited"
+      aliases: ["SREI", "SREI Infra", "SREI Infrastructure"]
+      bse_code: "523756"
+      nse_code: "SREINFRA"
+      status: "defaulted"  # NCLT 2021
+
+    - name: "SREI Equipment Finance"
+      full_name: "SREI Equipment Finance Limited"
+      aliases: ["SREI Equipment", "SEF"]
+      bse_code: ""
+      nse_code: ""
+      status: "defaulted"
+
+    - name: "Reliance Capital"
+      full_name: "Reliance Capital Limited"
+      aliases: ["Reliance Capital", "RCap", "RCAP", "Rel Capital"]
+      bse_code: "500111"
+      nse_code: "RELCAPITAL"
+      status: "defaulted"  # NCLT 2021, resolved 2023
+
+    - name: "Reliance Home Finance"
+      full_name: "Reliance Home Finance Limited"
+      aliases: ["Reliance Home Finance", "RHFL"]
+      bse_code: "540709"
+      nse_code: "RHFL"
+      status: "defaulted"
+
+    - name: "L&T Finance"
+      full_name: "L&T Finance Limited"
+      aliases: ["L&T Finance", "LTF", "L&T Fin"]
+      bse_code: "533519"
+      nse_code: "LTFH"
+      status: "active"
+
+    - name: "Power Finance Corporation"
+      full_name: "Power Finance Corporation Limited"
+      aliases: ["PFC", "Power Finance"]
+      bse_code: "532810"
+      nse_code: "PFC"
+      status: "active"
+
+    - name: "REC Limited"
+      full_name: "REC Limited"
+      aliases: ["REC", "Rural Electrification Corporation"]
+      bse_code: "532955"
+      nse_code: "RECLTD"
+      status: "active"
+
+    - name: "IREDA"
+      full_name: "Indian Renewable Energy Development Agency Limited"
+      aliases: ["IREDA"]
+      bse_code: "543963"
+      nse_code: "IREDA"
+      status: "active"
+
+  diversified_nbfc:
+    - name: "Bajaj Finance"
+      full_name: "Bajaj Finance Limited"
+      aliases: ["Bajaj Finance", "BFL", "Bajaj Fin"]
+      bse_code: "500034"
+      nse_code: "BAJFINANCE"
+      status: "active"
+
+    - name: "Shriram Finance"
+      full_name: "Shriram Finance Limited"
+      aliases: ["Shriram Finance", "Shriram Transport", "STFC", "Shriram"]
+      bse_code: "511218"
+      nse_code: "SHRIRAMFIN"
+      status: "active"
+
+    - name: "Mahindra Finance"
+      full_name: "Mahindra & Mahindra Financial Services Limited"
+      aliases: ["Mahindra Finance", "MMFSL", "M&M Finance", "M&M Financial"]
+      bse_code: "532720"
+      nse_code: "M&MFIN"
+      status: "active"
+
+    - name: "Piramal Enterprises"
+      full_name: "Piramal Enterprises Limited"
+      aliases: ["Piramal", "Piramal Capital", "PEL"]
+      bse_code: "500302"
+      nse_code: "PEL"
+      status: "active"
+
+    - name: "Cholamandalam Investment"
+      full_name: "Cholamandalam Investment and Finance Company Limited"
+      aliases: ["Chola", "Cholamandalam", "CIFCL", "Chola Finance"]
+      bse_code: "511243"
+      nse_code: "CHOLAFIN"
+      status: "active"
+
+    - name: "Tata Capital"
+      full_name: "Tata Capital Financial Services Limited"
+      aliases: ["Tata Capital", "TCFSL"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+    - name: "Aditya Birla Finance"
+      full_name: "Aditya Birla Finance Limited"
+      aliases: ["Aditya Birla Finance", "ABFL", "AB Finance"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+    - name: "HDB Financial Services"
+      full_name: "HDB Financial Services Limited"
+      aliases: ["HDB Financial", "HDBFS"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+    - name: "JM Financial"
+      full_name: "JM Financial Limited"
+      aliases: ["JM Financial", "JMF"]
+      bse_code: "523405"
+      nse_code: "JMFINANCIL"
+      status: "active"
+
+    - name: "IIFL Finance"
+      full_name: "IIFL Finance Limited"
+      aliases: ["IIFL Finance", "IIFL", "India Infoline Finance"]
+      bse_code: "532636"
+      nse_code: "IIFL"
+      status: "active"
+
+    - name: "Muthoot Finance"
+      full_name: "Muthoot Finance Limited"
+      aliases: ["Muthoot", "Muthoot Finance"]
+      bse_code: "533398"
+      nse_code: "MUTHOOTFIN"
+      status: "active"
+
+    - name: "Manappuram Finance"
+      full_name: "Manappuram Finance Limited"
+      aliases: ["Manappuram", "Manappuram Finance"]
+      bse_code: "531213"
+      nse_code: "MANAPPURAM"
+      status: "active"
+
+  microfinance:
+    - name: "Altico Capital"
+      full_name: "Altico Capital India Private Limited"
+      aliases: ["Altico", "Altico Capital"]
+      bse_code: ""
+      nse_code: ""
+      status: "defaulted"  # 2019 default
+
+    - name: "CreditAccess Grameen"
+      full_name: "CreditAccess Grameen Limited"
+      aliases: ["CreditAccess", "CA Grameen", "Grameen Koota"]
+      bse_code: "541770"
+      nse_code: "CREDITACC"
+      status: "active"
+
+    - name: "Fusion Micro Finance"
+      full_name: "Fusion Micro Finance Limited"
+      aliases: ["Fusion Micro", "Fusion Finance"]
+      bse_code: "543652"
+      nse_code: "FUSION"
+      status: "active"
+
+    - name: "Spandana Sphoorty"
+      full_name: "Spandana Sphoorty Financial Limited"
+      aliases: ["Spandana", "Spandana Sphoorty"]
+      bse_code: "542759"
+      nse_code: "SPANDANA"
+      status: "active"
+
+    - name: "Arohan Financial"
+      full_name: "Arohan Financial Services Limited"
+      aliases: ["Arohan", "Arohan Financial"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+    - name: "Asirvad Micro Finance"
+      full_name: "Asirvad Micro Finance Limited"
+      aliases: ["Asirvad", "Asirvad Micro"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+  vehicle_finance:
+    - name: "Sundaram Finance"
+      full_name: "Sundaram Finance Limited"
+      aliases: ["Sundaram Finance", "Sundaram"]
+      bse_code: "590071"
+      nse_code: "SUNDARMFIN"
+      status: "active"
+
+    - name: "TVS Credit Services"
+      full_name: "TVS Credit Services Limited"
+      aliases: ["TVS Credit", "TVSCSL"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+    - name: "Hero FinCorp"
+      full_name: "Hero FinCorp Limited"
+      aliases: ["Hero FinCorp", "Hero Finance"]
+      bse_code: ""
+      nse_code: ""
+      status: "active"
+
+  special_situations:
+    - name: "YES Bank"
+      full_name: "YES Bank Limited"
+      aliases: ["YES Bank", "Yes Bank"]
+      bse_code: "532648"
+      nse_code: "YESBANK"
+      status: "active"  # Rescued via RBI moratorium March 2020
+
+    - name: "Lakshmi Vilas Bank"
+      full_name: "Lakshmi Vilas Bank Limited"
+      aliases: ["LVB", "Lakshmi Vilas"]
+      bse_code: "532782"
+      nse_code: "LAKSHVILAS"
+      status: "merged"  # Merged with DBS India Nov 2020
+
+    - name: "PMC Bank"
+      full_name: "Punjab & Maharashtra Co-operative Bank"
+      aliases: ["PMC Bank", "PMC"]
+      bse_code: ""
+      nse_code: ""
+      status: "merged"  # Merged with Unity SFB 2022
