@@ -73,4 +73,4 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 0.1 — Foundation. FinRLlama cloned and analyzed. Running baseline inference on Colab next.
+Phase 1 — Data Collection. Phase 0 complete (FinRLlama analyzed, Qwen baseline tested on Colab, FinGPT codebase read). Starting with 1.1 Credit Event Timeline (scraping CRISIL/ICRA rating actions).

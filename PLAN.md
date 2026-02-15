@@ -19,18 +19,22 @@ Repo: https://github.com/Arnav-Gr0ver/ICAIF_FinRL-2024
 Model: https://huggingface.co/Arnav-Gr0ver/FinRLlama-3.2-3B-Instruct
 ```
 - ✅ Cloned repo, read every file, documented the full pipeline architecture
-- ⏳ Run inference on Colab (Qwen baseline + FinRLlama comparison)
-  - Notebook: `notebooks/00_colab_setup_and_inference.ipynb`
-  - LLaMA access pending from Meta (needed for FinRLlama base model)
+- ✅ Ran Qwen 2.5-3B baseline on Colab — generic sentiment OK, credit signals poor
+- ⏳ FinRLlama inference blocked — Meta LLaMA access pending (not a blocker, moving on)
 - **Learning checkpoint:** You should be able to explain LoRA rank, learning rate schedules, and what RLMF does differently from standard SFT
 
-### 0.2 Clone & Read FinGPT
+### 0.2 Clone & Read FinGPT ✅ DONE
 ```
 Repo: https://github.com/AI4Finance-Foundation/FinGPT
 Focus: FinGPT v3 series (LoRA fine-tuning on sentiment)
 ```
-- Don't run the full training — just read the data pipeline and training scripts
-- Understand how they structure training data (instruction format, labels)
+- ✅ Cloned repo, read v3 data pipeline + Benchmark training/eval scripts
+- ✅ Key takeaways documented:
+  - Three-field format: instruction/input/output (we adopt this)
+  - Dataset balancing via oversampling small datasets (critical for our imbalanced credit data)
+  - LoRA r=8, alpha=32 for sentiment; we use r=16 for harder credit signal task
+  - Prompt masking: loss only on answer tokens, not instruction/input
+  - Their eval is substring matching — we need structured multi-field evaluation
 - **Learning checkpoint:** You should understand the difference between SFT, RLHF, and RLMF
 
 ### 0.3 Set Up Development Environment ✅ DONE

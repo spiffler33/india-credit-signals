@@ -21,6 +21,7 @@ wandb/
 
 # Reference repos — cloned for study, not our code
 research/FinRLlama/
+research/FinGPT/
 
 # OS files
 .DS_Store
