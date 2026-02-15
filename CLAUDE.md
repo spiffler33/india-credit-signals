@@ -59,18 +59,29 @@ Building a fine-tuned LLM to extract credit risk deterioration signals from news
 # Run tests
 pytest tests/ -v
 
-# Start API server
+# Load and summarize rating actions (training window 2016-2024)
+python -m src.data.scrape_ratings
+
+# Load all rating actions (including pre-2016)
+python -m src.data.scrape_ratings --all
+
+# Start API server (Phase 4)
 uvicorn src.api.main:app --reload
 
-# Start frontend
+# Start frontend (Phase 4)
 cd src/dashboard && npm run dev
 
-# Run a data pipeline
-python -m src.data.scrape_gdelt --config configs/gdelt.yaml
-
-# Run model inference (on Colab, not local)
+# Run model inference (on Colab, not local — Phase 2+)
 python -m src.signals.predict --model data/models/latest --input data/processed/test.jsonl
 ```
 
 ## Current Phase
-Phase 1 — Data Collection. Phase 0 complete (FinRLlama analyzed, Qwen baseline tested on Colab, FinGPT codebase read). Starting with 1.1 Credit Event Timeline (scraping CRISIL/ICRA rating actions).
+Phase 1 — Data Collection. Phase 0 complete. Phase 1.1 (rating actions) and 1.2 (GDELT news) complete.
+Next: Import GDELT articles into main project, then Phase 1.3 (labeling articles with credit signals).
+
+**Data sourcing workflow:** Complex scraping tasks are done in a separate project at
+`/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
+
+**Key data files:**
+- Rating actions: `data/raw/rating_actions_sourced.csv` (1,654 records, tracked in git)
+- GDELT articles: needs import from `/Users/coddiwomplers/Desktop/Python/data_scraping/gdelt_news/output/gdelt_articles.csv` (74K rows)

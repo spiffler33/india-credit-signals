@@ -57,46 +57,38 @@ Focus: FinGPT v3 series (LoRA fine-tuning on sentiment)
 ## Phase 1: Data Collection (Days 3-8)
 **Goal:** Build the labeled training dataset. This is 60% of the project.
 
-### 1.1 Credit Event Timeline
-**Source:** CRISIL, ICRA, CARE, India Ratings — rating action histories
+### 1.1 Credit Event Timeline ✅ DONE
+**Source:** CRISIL/ICRA SEBI disclosure scrapers + CARE/India Ratings manual curation.
+Built in separate data sourcing project (`/Users/coddiwomplers/Desktop/Python/data_scraping/`).
 
-| Entity | Rating Agency | Date | Action | From | To |
-|--------|--------------|------|--------|------|------|
-| IL&FS | ICRA | Sep 2018 | Downgrade | AAA | D |
-| DHFL | CRISIL | Jun 2019 | Downgrade | AA | D |
-| ... | ... | ... | ... | ... | ... |
+**Result:**
+- 1,654 total records (1,311 in 2016-2024 training window)
+- 39 entities, 6 agencies (CRISIL, ICRA, CARE, India Ratings, Brickwork, Acuite)
+- 10 stressed entities with 38 default events
+- All dates verified from SEBI disclosures, agency-native rating scales preserved
+- CSV: `data/raw/rating_actions_sourced.csv` (tracked in git)
 
-**Target:** 100+ rating actions across 50+ NBFCs from 2016-2024.
+**Known gaps (acceptable for now):**
+- CARE/India Ratings coverage is thin (25 + 9 records vs 807 + 463 for CRISIL/ICRA)
+- Watchlist/outlook actions are underrepresented (9 total)
+- Can backfill later by adding CARE scraper — merge pipeline deduplicates automatically
 
-How to get this data:
-- CRISIL: https://www.crisil.com/en/home/our-analysis/ratings/rating-list.html
-- ICRA: https://www.icra.in/Rationale/Search
-- CARE: https://www.careedge.in/ratings/rating-rationale
-- India Ratings: https://www.indiaratings.co.in/PressRelease
+### 1.2 News Data Collection ✅ DONE
+**Source:** GDELT DOC 2.0 API (free, no API key).
+Built in separate project (`/Users/coddiwomplers/Desktop/Python/data_scraping/gdelt_news/`).
 
-Scrape rating action pages. Each has entity name, date, old rating, new rating, rationale PDF.
+**Result:**
+- 74,028 article rows (32,570 unique URLs) across 756 query windows
+- 38/39 entities covered (IL&FS Financial Services got 0 hits — articles are in parent IL&FS results)
+- Date range: 2017-04-07 to 2024-12-25
+- Top sources: Economic Times, Business Standard, Moneycontrol, Hindu Business Line, Financial Express
+- CSV: `/Users/coddiwomplers/Desktop/Python/data_scraping/gdelt_news/output/gdelt_articles.csv`
+- **NOT YET IMPORTED** into main project
 
-### 1.2 News Data Collection
-**Primary source:** GDELT (free, covers Indian English press well)
-```
-GDELT API: https://api.gdeltproject.org/api/v2/doc/doc
-Query pattern: "NBFC" OR "shadow bank" OR entity_name
-Filter: sourcelang:english, sourcecountry:IN
-Date range: 6 months before each rating action
-```
-
-**Secondary source:** BSE/NSE Corporate Filings
-```
-BSE API: https://api.bseindia.com/
-NSE: https://www.nseindia.com/companies-listing/corporate-filings-announcements
-```
-Material event disclosures, profit warnings, board meeting outcomes.
-
-**Tertiary source:** RBI Circulars & Press Releases
-```
-RBI: https://www.rbi.org.in/Scripts/NotificationUser.aspx
-Focus: NBFC regulatory changes, risk weight modifications, PCA framework
-```
+**Known issues:**
+- Shriram Finance has 24% of all rows (188 windows from routine affirmations) — needs balancing
+- 100/window cap was added mid-run; 36 early windows exceeded it
+- Article body text NOT yet collected — only metadata (URL, title, date, source)
 
 ### 1.3 Label Construction
 For each article/filing, label with:
