@@ -336,9 +336,30 @@ Multi-entity articles mentioning held-out entities stay in training (minor conta
 ## Phase 2: Model Training (Days 9-14)
 **Goal:** Fine-tune a model that distinguishes credit signals from generic sentiment.
 
-### 2.1 Base Model Selection
+### 2.1 Base Model Evaluation ✅ READY (run on Colab)
 **Primary:** Qwen 2.5-7B-Instruct (strong on financial text, multilingual for future Hindi extension)
 **Fallback:** LLaMA 3.1-8B-Instruct (more community support, FinRLlama was built on LLaMA)
+
+**What was built:**
+- `src/training/evaluate.py` — Canonical evaluation module: strict parser (copied from `parse_training_output.py`),
+  failure mode taxonomy (7 buckets: missing_field, wrong_vocab, missing_end, extra_content, refusal,
+  totally_unstructured, partial_format), per-field accuracy, per-entity holdout evaluation with
+  direction-specific precision/recall, stratified sampling, decision reporting.
+- `notebooks/phase2_1_base_model_eval.ipynb` — Self-contained Colab notebook:
+  1. Setup: mount Drive, pip install transformers+bitsandbytes+accelerate, load Qwen 2.5-7B in 4-bit NF4
+  2. Sample: 1,000 stratified from train.jsonl (500 CR=Yes, 500 CR=No)
+  3. Inference: sequential with tqdm, greedy decoding, saves to `base_model_outputs.jsonl`
+  4. Parse eval: strict parser + failure taxonomy with 3 examples per bucket
+  5. Field accuracy: credit_relevant, direction, signal_type, sector_wide, confidence
+  6. Holdout scaffold: per-entity eval function ready for post-training use
+  7. Decision: GO (>80%) / INVESTIGATE (20-80%) / NO-GO (<20%)
+
+**How to run:**
+1. Upload `data/processed/{train,val,test,entity_holdout}.jsonl` to `drive/MyDrive/india-credit-signals/data/processed/`
+2. Open `notebooks/phase2_1_base_model_eval.ipynb` in Colab
+3. Set runtime to GPU (T4 is fine, A100 is faster)
+4. Run all cells top-to-bottom (~20-45 min depending on GPU)
+5. Check the decision cell at the bottom
 
 ### 2.2 Training Configuration
 Adapt FinRLlama's training script:

@@ -76,15 +76,16 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 1 — Data Collection. COMPLETE. All sub-phases (1.1, 1.2, 1.3, 1.4) done.
+Phase 2 — Model Training. Phase 2.1 (Base Model Evaluation) ready to run on Colab.
 
-**WHERE WE ARE NOW:** Phase 1 fully complete. Training data formatted and split into
-`train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133), `entity_holdout.jsonl` (3,303).
-55 tests pass. Ready for Phase 2.
+**WHERE WE ARE NOW:** Phase 1 fully complete. Phase 2.1 notebook and evaluation module created.
+Training data: `train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133), `entity_holdout.jsonl` (3,303).
+55 tests pass.
 
-**Immediate next action:** Phase 2.1 on Colab — Load base model (Qwen 2.5-7B), feed it
-1,000 training examples with our instruction/input format, parse every output, measure
-parse success rate. If >20% fail, tighten the format before the ~$50-100 training run.
+**Immediate next action:** Run `notebooks/phase2_1_base_model_eval.ipynb` on Colab.
+Upload data files to `drive/MyDrive/india-credit-signals/data/processed/` first.
+The notebook loads Qwen 2.5-7B in 4-bit, runs 1,000 examples, reports parse rate + GO/NO-GO.
+If parse rate >80% → proceed to LoRA training. If 20-80% → investigate failures. If <20% → simplify format.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -133,3 +134,7 @@ python -m src.data.format_training               # produces train/val/test/entit
 - `src/data/format_training.py` — joins labels + articles, formats, temporal split, writes JSONL
 - `src/data/parse_training_output.py` — strict parser for structured text output + format_output_text()
 - `tests/test_format_training.py` — 37 tests (parser edge cases, formatter structure, split logic)
+
+**Key Phase 2.1 files:**
+- `src/training/evaluate.py` — canonical evaluation module (parser, failure taxonomy, per-entity holdout metrics)
+- `notebooks/phase2_1_base_model_eval.ipynb` — Colab notebook: Qwen 2.5-7B 4-bit → 1,000 examples → parse eval → GO/NO-GO
