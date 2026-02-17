@@ -76,14 +76,15 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 1 — Data Collection. Phase 0 complete. Phase 1.1, 1.2, and 1.3 COMPLETE. Phase 1.4 DESIGN COMPLETE.
+Phase 1 — Data Collection. COMPLETE. All sub-phases (1.1, 1.2, 1.3, 1.4) done.
 
-**WHERE WE ARE NOW:** Phase 1.4 design finalized. All design decisions documented in
-`reports/phase1_4_training_data_design.md`. Ready to write code.
+**WHERE WE ARE NOW:** Phase 1 fully complete. Training data formatted and split into
+`train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133), `entity_holdout.jsonl` (3,303).
+55 tests pass. Ready for Phase 2.
 
-**Immediate next action:** Phase 1.4 — Write `format_training.py`, `parse_training_output.py`,
-`training_config.yaml`, and tests. Then run to produce `train.jsonl`, `val.jsonl`, `test.jsonl`,
-`entity_holdout.jsonl`.
+**Immediate next action:** Phase 2.1 on Colab — Load base model (Qwen 2.5-7B), feed it
+1,000 training examples with our instruction/input format, parse every output, measure
+parse success rate. If >20% fail, tighten the format before the ~$50-100 training run.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -97,6 +98,9 @@ Phase 1 — Data Collection. Phase 0 complete. Phase 1.1, 1.2, and 1.3 COMPLETE.
 - Audit labels: `data/processed/labels_audit.jsonl` (313 Sonnet audit labels)
 - **Final labels: `data/processed/labels_final.jsonl` (17,274 merged, 0 parse errors)**
 - Final labels CSV: `data/processed/labels_final.csv` (for Excel review)
+- Training config: `configs/training_config.yaml` (split dates, vocab, holdout entities)
+- **Training splits: `data/processed/train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133)**
+- **Entity holdout: `data/processed/entity_holdout.jsonl` (3,303 — DHFL/Reliance Capital/Cholamandalam)**
 
 **Presentation / Contest Reports:**
 The `reports/` directory collects analysis artifacts for the final FinAI 2026 submission and presentation.
@@ -120,4 +124,12 @@ python -m src.data.label_audit select --targeted  # 313 candidates (low-conf + 3
 python -m src.data.label_audit select --full       # 9,299 candidates (all credit-relevant)
 python -m src.data.label_audit run                 # re-label candidates with Sonnet
 python -m src.data.label_audit merge               # combine into labels_final.jsonl
+
+# Format training data (Phase 1.4)
+python -m src.data.format_training               # produces train/val/test/entity_holdout JSONL
 ```
+
+**Key Phase 1.4 scripts:**
+- `src/data/format_training.py` — joins labels + articles, formats, temporal split, writes JSONL
+- `src/data/parse_training_output.py` — strict parser for structured text output + format_output_text()
+- `tests/test_format_training.py` — 37 tests (parser edge cases, formatter structure, split logic)

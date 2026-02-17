@@ -243,7 +243,7 @@ gdelt_for_labeling.csv (17,299)
 
 **Ground truth:** rating_windows held back from LLM prompt — did entity get downgraded within 6 months? This is never shown to the labeling model (would be data leakage). Used only for post-hoc evaluation.
 
-### 1.4 Training Data Format ✅ DESIGN COMPLETE — AWAITING CODE
+### 1.4 Training Data Format ✅ COMPLETE
 
 **Design report:** `reports/phase1_4_training_data_design.md` (full rationale for all decisions)
 
@@ -292,41 +292,44 @@ Adjust via loss weighting or threshold tuning in Phase 2 if needed.
 
 **Split strategy:** Temporal (date-based) to prevent data leakage.
 
-| Split | Date Range | Est. Articles | Purpose |
-|-------|-----------|------:|---------|
-| Train | 2017-04 to 2021-12 | ~10,600 | Crisis + recovery period |
-| Validation | 2022-01 to 2023-06 | ~2,100 | Hyperparameter tuning |
-| Test | 2023-07 to 2024-12 | ~2,700 | Forward evaluation + backtest |
+**Actual split results:**
 
-**Entity holdout diagnostic:** 3 entities removed entirely from training for a separate
-memorization test. Answers: "Did we learn text patterns or just entity names?"
+| Split | Date Range | Articles | CR=1 | Det. | Imp. |
+|-------|-----------|------:|------:|------:|------:|
+| Train | 2017-04 to 2021-12 | 9,591 | 5,622 | 3,886 | 1,210 |
+| Validation | 2022-01 to 2023-06 | 2,247 | 812 | 334 | 331 |
+| Test | 2023-07 to 2024-12 | 2,133 | 721 | 386 | 263 |
+| Entity Holdout | 2017-06 to 2024-12 | 3,303 | 2,065 | 1,850 | 161 |
+
+**Entity holdout diagnostic:** 3 entities removed entirely from training (single-entity articles
+only) to test whether the model learned text patterns or just entity names.
 
 | Entity | Articles | Profile | Purpose |
 |--------|------:|---------|---------|
-| DHFL | 1,243 | 91% deterioration | Crisis detection on unseen entity |
-| Reliance Capital | 688 | 80% deterioration | Different crisis arc — generalization |
-| Cholamandalam | 1,372 | 22% credit-relevant | False positive control on stable entity |
+| DHFL | 1,243 | 91.3% deterioration | Crisis detection on unseen entity |
+| Reliance Capital | 688 | 80.2% deterioration | Different crisis arc — generalization |
+| Cholamandalam | 1,372 | 11.9% deterioration | False positive control on stable entity |
 
 Multi-entity articles mentioning held-out entities stay in training (minor contamination, noted).
 
 **Output robustness check:** Two-phase approach.
-- Phase 1.4 (now): strict parser + comprehensive tests against synthetic edge cases
+- ✅ Phase 1.4: strict parser + 37 tests against synthetic edge cases (all pass)
 - Phase 2.1 (Colab): run 1,000 base-model outputs through parser, iterate format if >20% fail
 
-**Files to create:**
+**Files created:**
 
 | File | Purpose |
 |------|---------|
 | `configs/training_config.yaml` | Split cutoffs, instruction text, field vocab, held-out entities |
 | `src/data/format_training.py` | Join labels + articles → instruction/input/output JSONL |
-| `src/data/parse_training_output.py` | Strict parser for structured text output format |
-| `tests/test_format_training.py` | Tests for formatter + parser |
+| `src/data/parse_training_output.py` | Strict parser for structured text output format + format_output_text() |
+| `tests/test_format_training.py` | 37 tests for formatter + parser (55 total across test suite) |
 
 **Output files:**
-- `data/processed/train.jsonl`, `val.jsonl`, `test.jsonl` (main split)
-- `data/processed/entity_holdout.jsonl` (diagnostic set)
+- `data/processed/train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133)
+- `data/processed/entity_holdout.jsonl` (3,303)
 
-**Total training examples:** 17,274 (all articles, cr=0 included as negative examples)
+**Total training examples:** 17,274 (all articles, cr=0 included as negative examples, 100% join rate)
 
 ---
 
