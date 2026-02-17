@@ -6,7 +6,7 @@ Building a fine-tuned LLM to extract credit risk deterioration signals from news
 ## CRITICAL RULES
 
 ### Learning-First Output
-**YOU MUST follow @.claude/OUTPUT_STYLE.md for ALL responses.** The user is learning ML fine-tuning, LoRA, RLMF, and data engineering. Every code block, every script, every pipeline step must include a brief explanation of WHY you made each decision. This is non-negotiable.
+**YOU MUST follow @.claude/output-styles/vats_output_style.md for ALL responses.** The user is learning ML fine-tuning, LoRA, RLMF, and data engineering. Every code block, every script, every pipeline step must include a brief explanation of WHY you made each decision. This is non-negotiable.
 
 ### Code Style
 - Python 3.11+. Type hints on all functions.
@@ -76,12 +76,42 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 1 — Data Collection. Phase 0 complete. Phase 1.1 (rating actions) and 1.2 (GDELT news) complete.
-Next: Import GDELT articles into main project, then Phase 1.3 (labeling articles with credit signals).
+Phase 1 — Data Collection. Phase 0 complete. Phase 1.1, 1.2, and 1.3 Steps 1-4 (calibration + bulk) complete.
+
+**WHERE WE ARE NOW:** Phase 1.3 Step 4 — Calibration (300, Sonnet) and Bulk (17,299, Haiku) labeling DONE.
+11 few-shot examples added to config. Audit pipeline COMPLETE (targeted: 313 articles, 82.3% agreement).
+Final merged labels at `data/processed/labels_final.jsonl` (17,274 labels, 0 parse errors).
+See `PLAN.md` → Phase 1.3 → Step 4 execution checklist (steps 1-7 done, step 8 remains).
+
+**Immediate next action:** Spot-check 50 labels against rating_windows ground truth (Step 8),
+then move to Phase 1.4 (training data formatting).
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
 
 **Key data files:**
 - Rating actions: `data/raw/rating_actions_sourced.csv` (1,654 records, tracked in git)
-- GDELT articles: needs import from `/Users/coddiwomplers/Desktop/Python/data_scraping/gdelt_news/output/gdelt_articles.csv` (74K rows)
+- GDELT for labeling: `data/processed/gdelt_for_labeling.csv` (17,299 articles with body text)
+- Labeling config: `configs/labeling_config.yaml` (prompts, models, thresholds, 11 few-shot examples)
+- Calibration labels: `data/processed/labels_calibration.jsonl` (300 Sonnet labels, 0 errors)
+- Bulk labels: `data/processed/labels_bulk.jsonl` (17,299 Haiku labels, 0 errors)
+- Audit labels: `data/processed/labels_audit.jsonl` (313 Sonnet audit labels)
+- **Final labels: `data/processed/labels_final.jsonl` (17,274 merged, 0 parse errors)**
+- Final labels CSV: `data/processed/labels_final.csv` (for Excel review)
+
+**Key labeling scripts:**
+```bash
+# Sample 300 articles for calibration (already run, output exists)
+python -m src.data.label_sampler
+
+# Label articles (calibration=Sonnet, bulk=Haiku)
+python -m src.data.label_articles --phase calibration
+python -m src.data.label_articles --phase bulk
+python -m src.data.label_articles --phase calibration --dry-run  # test prompts
+
+# Audit workflow (targeted mode is default)
+python -m src.data.label_audit select --targeted  # 313 candidates (low-conf + 300 sample)
+python -m src.data.label_audit select --full       # 9,299 candidates (all credit-relevant)
+python -m src.data.label_audit run                 # re-label candidates with Sonnet
+python -m src.data.label_audit merge               # combine into labels_final.jsonl
+```

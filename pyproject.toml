@@ -34,23 +34,21 @@ dependencies = [
     # polars: Faster DataFrame library for large datasets (10-100x faster than pandas on big data)
     # No [rtcompat] needed — ARM Python has native wheels with full SIMD support
     "polars>=1.0.0",
-
     # --- API & Serving ---
     # fastapi: Modern Python web framework for the API backend
     "fastapi>=0.115.0",
     # uvicorn: ASGI server that runs FastAPI (like the engine under the API hood)
     "uvicorn>=0.29.0",
-
     # --- Config & Logging ---
     # pyyaml: Reads YAML config files (human-readable config, not hardcoded values)
     "pyyaml>=6.0",
     # loguru: Better logging than Python's built-in (structured, colored, easy to use)
     "loguru>=0.7.0",
-
     # --- Utilities ---
     # torch: PyTorch — the deep learning framework everything else is built on
     # No pin needed — latest torch has excellent M1 MPS support
     "torch>=2.5.0",
+    "anthropic>=0.79.0",
 ]
 
 [project.optional-dependencies]

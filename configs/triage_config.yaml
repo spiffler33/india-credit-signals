@@ -1,0 +1,208 @@
+# WHY THIS: Mechanical title-based triage before expensive LLM labeling.
+# GDELT returns ~74K articles but many are noise (defence news, sports,
+# stock tips with entity name matches). This config drives a three-layer
+# filter: (1) source domain allowlist, (2) financial keyword check,
+# (3) false entity match detection. We err on the side of KEEPING
+# borderline articles — better to send 5K to the LLM labeler than miss
+# a credit-relevant article about an NBFC default.
+
+# --- Layer 1: Source Domain Filter ---
+# Articles from allowed domains pass to keyword check.
+# Articles from blocked domains are auto-dropped.
+# Articles from unlisted domains go to "review" bucket for manual check.
+# Matching is by domain suffix: "indiatimes.com" matches
+# "economictimes.indiatimes.com", "realty.economictimes.indiatimes.com", etc.
+
+source_domains:
+  allowed:
+    # Indian financial / business news (primary)
+    - indiatimes.com            # ET, TOI, Realty ET, etc.
+    - business-standard.com
+    - moneycontrol.com
+    - thehindubusinessline.com
+    - financialexpress.com
+    - businesstoday.in
+    - livemint.com
+    - bloombergquint.com
+    - equitybulls.com
+    - moneylife.in
+    - indiainfoline.com
+    - businessinsider.in
+    - vccircle.com
+    - businessworld.in
+    - btvi.in
+    - marketscreener.com
+    - dealstreetasia.com
+
+    # Indian general news (strong finance coverage)
+    - thehindu.com
+    - ndtv.com
+    - indianexpress.com
+    - firstpost.com
+    - dnaindia.com
+    - news18.com
+    - indiatoday.in
+    - newindianexpress.com
+    - freepressjournal.in
+    - telegraphindia.com
+    - deccanchronicle.com
+    - sify.com
+    - rediff.com
+    - zeenews.india.com
+    - timesnownews.com
+    - aninews.in
+    - prokerala.com
+
+    # International with India coverage
+    - reuters.com
+    - bloomberg.com
+    - msn.com
+
+    # Specialty (legal, regional)
+    - indiankanoon.org          # NCLT/IBC case judgments — credit-relevant
+    - dailyexcelsior.com
+    - siasat.com
+    - daijiworld.com
+    - newsnow.in
+
+  blocked:
+    # Domains that clearly won't contain credit-relevant NBFC news.
+    # Articles from these are auto-dropped to save review effort.
+    - defencenews.in
+    - idrw.org                  # Indian defence research
+    - bruneinews.net
+    - adgully.com               # Advertising industry
+    - sportstar.thehindu.com
+    - bollywoodhungama.com
+    - cricbuzz.com
+    - sportskeeda.com
+
+
+# --- Layer 2: Title Keyword Filter ---
+# Article must contain at least one of these keywords in the title,
+# OR the entity name must appear in the title. If neither, it's dropped.
+# Be generous — keep borderline, drop obvious noise (sports, entertainment).
+
+title_keywords:
+  # Credit / rating specific
+  - rating
+  - downgrade
+  - upgrade
+  - default
+  - credit
+  - creditwatch
+  - watchlist
+  - outlook
+  - crisil
+  - icra
+  - care ratings
+  - india ratings
+  - fitch
+  - moody
+  - brickwork
+  - acuite
+
+  # Debt / funding
+  - loan
+  - debt
+  - npa
+  - bond
+  - debenture
+  - ncd
+  - commercial paper
+  - borrowing
+  - refinanc
+  - repay
+  - moratorium
+  - restructur
+  - write-off
+  - writeoff
+  - provision
+  - impairment
+  - slippage
+  - overdue
+  - delinquen
+  - gnpa
+  - nnpa
+
+  # Financial / business
+  - nbfc
+  - finance
+  - bank
+  - capital
+  - fund
+  - profit
+  - loss
+  - revenue
+  - earning
+  - quarter
+  - fiscal
+  - growth
+  - margin
+  - dividend
+  - interest
+  - equity
+  - share
+  - stock
+  - investor
+  - ipo
+
+  # Regulatory
+  - rbi
+  - sebi
+  - irdai
+  - nhb
+  - regulat
+  - compliance
+  - circular
+  - penalty
+  - fine
+  - sanction
+  - audit
+  - inspection
+
+  # Stress / distress
+  - insolvency
+  - nclt
+  - ibc
+  - bankruptcy
+  - resolution
+  - creditor
+  - liquidat
+  - fraud
+  - scam
+  - crisis
+  - stress
+  - troubled
+  - collapse
+  - bail
+
+  # Corporate actions
+  - merger
+  - acquisition
+  - takeover
+  - divestment
+  - subsidiary
+  - stake
+  - board
+  - director
+  - ceo
+  - managing director
+  - appointment
+  - resign
+
+  # Sector terms
+  - housing finance
+  - microfinance
+  - vehicle finance
+  - gold loan
+  - infrastructure
+  - asset quality
+  - net worth
+  - leverage
+  - solvency
+  - liquidity
+  - cash flow
+  - deposit
+  - mutual fund
+  - insurance

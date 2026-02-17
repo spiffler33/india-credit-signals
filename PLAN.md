@@ -82,25 +82,160 @@ Built in separate project (`/Users/coddiwomplers/Desktop/Python/data_scraping/gd
 - 38/39 entities covered (IL&FS Financial Services got 0 hits — articles are in parent IL&FS results)
 - Date range: 2017-04-07 to 2024-12-25
 - Top sources: Economic Times, Business Standard, Moneycontrol, Hindu Business Line, Financial Express
-- CSV: `/Users/coddiwomplers/Desktop/Python/data_scraping/gdelt_news/output/gdelt_articles.csv`
-- **NOT YET IMPORTED** into main project
+- Imported into main project and processed through Steps 1-3 below
 
-**Known issues:**
-- Shriram Finance has 24% of all rows (188 windows from routine affirmations) — needs balancing
-- 100/window cap was added mid-run; 36 early windows exceeded it
-- Article body text NOT yet collected — only metadata (URL, title, date, source)
+### 1.3 Data Processing & Label Construction
 
-### 1.3 Label Construction
-For each article/filing, label with:
-- `credit_relevant`: 0 or 1 (is this about credit quality, not general business?)
-- `signal_direction`: -1 (deterioration), 0 (neutral), +1 (improvement)
-- `signal_type`: one of [liquidity, asset_quality, regulatory, contagion, governance, funding]
-- `entity`: which NBFC(s) does this affect?
-- `sector_wide`: 0 or 1 (does this affect all NBFCs or just this one?)
+Phase 1.3 has 4 sub-steps. Steps 1-3 clean and filter raw GDELT data. Step 4 is the LLM labeling pipeline.
 
-**Ground truth:** Did the entity get downgraded within 6 months? Binary label.
+#### Step 1: Import & Deduplicate ✅ DONE
+- `src/data/import_gdelt.py` — collapsed 74K rows → 32,570 unique URLs
+- Attached rating windows (entity, date, action_type, outcome, days_before) as JSON
+- Output: `data/processed/gdelt_deduped.csv`
 
-**CRITICAL:** Use Claude (prompted, not fine-tuned) to do initial labeling of articles. Then manually verify 200+ labels. This is your quality gate.
+#### Step 2: Title-Based Triage ✅ DONE
+- `src/data/triage_articles.py` + `configs/triage_config.yaml`
+- Three-layer filter: blocked domains → financial keywords → entity-in-title
+- Result: 14,688 pass, 4,098 review, 13,784 drop
+- Critical: 97.5% survival rate for negative-outcome articles
+- Output: `data/processed/gdelt_triaged_pass.csv`, `gdelt_triaged_review.csv`, `gdelt_triaged_drop.csv`
+
+#### Step 3: Body Text Scraping + Review Promotion ✅ DONE
+- Body text scraped for pass + review articles (done in data_scraping project)
+- `src/data/promote_review.py` — promoted review articles with body text to pass
+- Combined into final labeling input: 17,299 articles with body text
+- Output: `data/processed/gdelt_for_labeling.csv`
+
+#### Step 4: LLM Labeling Pipeline ✅ CODE COMPLETE — AWAITING EXECUTION
+Three-phase Calibrate → Bulk → Audit pipeline (~$30-35 total).
+
+**Strategy:** Cheap model (Haiku) for volume, expensive model (Sonnet) for quality, merge for best of both.
+This is standard in ML data pipelines — you don't need GPT-4-level accuracy on every single article,
+just on the ones that matter (credit-relevant, borderline, low-confidence).
+
+**Architecture — 5 files + 1 config:**
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `configs/labeling_config.yaml` | 136 | All prompts, model IDs, thresholds, sampling keywords, few-shot examples (initially empty) |
+| `src/data/label_models.py` | 178 | `SignalType`/`Confidence` enums, `ArticleLabel` dataclass, bulletproof JSON parser (handles markdown fences, yes/no→1/0, invented signal types), JSONL I/O |
+| `src/data/label_sampler.py` | 218 | Deliberate 300-article calibration sample: 100 credit-likely + 100 noise-likely + 100 ambiguous, max 15 per entity per bucket |
+| `src/data/label_articles.py` | 322 | Async labeling engine: asyncio + semaphore (10 concurrent), exponential backoff retry, progressive JSONL writes (crash-safe), full resume support |
+| `src/data/label_audit.py` | 237 | select: identifies audit candidates, run: relabels with Sonnet, merge: Sonnet overrides Haiku on disagreement |
+| `tests/test_label_models.py` | 198 | 18 tests: JSON parse, markdown fence stripping, bool coercion, signal type mapping, consistency enforcement, JSONL I/O, corrupt line handling |
+
+Dependency: `anthropic` SDK v0.79.0 installed via `uv add anthropic`.
+
+**Key design decisions:**
+
+1. **1 article per API call** (not batched). Batching 5 per call saves ~$1.50 total but one
+   bad article corrupts the whole batch's JSON parsing. At Haiku prices (~$0.0003/article),
+   the simplicity of 1-per-call is worth the marginal cost. Each call: ~900 input + ~120 output tokens.
+
+2. **Text truncation at 3,000 chars.** Article bodies average ~2,646 chars. First paragraphs
+   contain the credit signal 90% of the time. 3,000 covers 75% of articles in full. This
+   keeps per-article cost down while capturing nearly all signal content.
+
+3. **Models:** Calibration + Audit use `claude-sonnet-4-5-20250929` (accurate, $3/M input).
+   Bulk uses `claude-haiku-4-5-20251001` (fast/cheap, $0.25/M input). Config-driven — swap
+   model IDs in `configs/labeling_config.yaml` without code changes.
+
+4. **Resumable pipeline.** Each label is appended to JSONL immediately after the API returns.
+   On restart, `get_completed_urls()` reads existing JSONL, builds a set of done URLs, skips them.
+   A crash at article 8,000 loses zero work.
+
+5. **Audit selection criteria:** Re-check with Sonnet if ANY of:
+   `credit_relevant == 1` OR `signal_direction != 0` OR `confidence == "low"` OR `parse_error`.
+   This focuses the expensive model on "interesting" articles (~4-6K estimated).
+
+**Prompt design — boundary rules (critical for label quality):**
+
+The system prompt anchors the model as a credit analyst with 8 explicit boundary rules:
+- General business expansion is NOT credit-relevant unless it implies leverage/funding pressure
+- Management changes are NOT credit-relevant unless tied to governance concerns/distress
+- Regulatory actions ARE credit-relevant if they restrict operations/capital adequacy
+- Revenue/profit growth is NOT credit-relevant unless it affects debt servicing
+- Stock price movements alone are NOT credit-relevant
+- Awards, CSR, brand marketing are NEVER credit-relevant
+- Legal/court cases ARE credit-relevant if they involve debt recovery/insolvency/large penalties
+- Asset sales during financial stress → direction=-1 (distress signal despite temporary liquidity)
+
+Output format: strict JSON with 7 fields. If credit_relevant=0, other fields forced to defaults.
+Full prompt text lives in `configs/labeling_config.yaml` → `prompt.system`.
+
+**Data flow:**
+```
+gdelt_for_labeling.csv (17,299)
+    │
+    ├─ label_sampler.py ──→ labels_calibration_sample.csv (300) ✅ DONE
+    │                              │
+    │                     label_articles.py --phase calibration ✅ DONE (300, 0 errors)
+    │                              │
+    │                     labels_calibration.jsonl (300 labels) ✅ DONE
+    │                              │
+    │                     11 few-shot examples → config YAML ✅ DONE
+    │
+    ├─ label_articles.py --phase bulk ✅ DONE (17,299, 0 errors after retry)
+    │                              ──→ labels_bulk.jsonl (17,299)
+    │                                                          │
+    │                                               label_audit.py select --targeted ✅ DONE
+    │                                                          │
+    │                                               audit_candidates.csv (313: 300 sample + 13 low-conf)
+    │                                                          │
+    │                                               label_audit.py run (Sonnet, ~$2) ✅ DONE
+    │                                                          │
+    │                                               labels_audit.jsonl (313)
+    │                                                          │
+    │                                               label_audit.py merge ✅ DONE
+    │                                                          │ 82.3% agreement (accepted)
+    └──────────────────────────────────────────→ labels_final.jsonl (17,274 merged)
+                                                 labels_final.csv (for Excel review)
+```
+
+**Execution steps:**
+1. ✅ Create `.env` with `ANTHROPIC_API_KEY=sk-ant-...` (gitignored)
+2. ✅ Run calibration: 300 articles with Sonnet, 0 parse errors, 50/50 credit split
+   - Output: `data/processed/labels_calibration.jsonl`
+3. ✅ Reviewed 300 labels, added 11 few-shot examples to `configs/labeling_config.yaml`
+   - 5 deterioration (asset_quality, liquidity, funding, governance, contagion)
+   - 4 not-credit-relevant (stock price, routine mgmt, awards, business expansion)
+   - 2 improvement (rating upgrade, capital raise)
+   - Added boundary rule: distress-era asset sales → direction=-1
+4. ✅ Run bulk: 17,299 articles with Haiku, 0 errors after retry
+   - 9,299 credit-relevant (53.8%), 6,506 deterioration, 1,973 improvement
+   - Output: `data/processed/labels_bulk.jsonl`
+   - Cost: ~$36 USD (higher than $5 estimate due to 11 few-shot examples tripling input tokens)
+5. ✅ Targeted audit select: `python -m src.data.label_audit select --targeted`
+   - 313 candidates: 300 stratified sample + 13 low-confidence + 0 parse errors
+   - Full audit (9,299) would cost ~$58 — targeted costs ~$2
+   - Output: `data/processed/audit_candidates.csv`
+6. ✅ Targeted audit run: `python -m src.data.label_audit run`
+   - 313 articles re-labeled with Sonnet, 0 parse errors, 104 seconds
+   - Output: `data/processed/labels_audit.jsonl`
+7. ✅ Merge: `python -m src.data.label_audit merge`
+   - Haiku↔Sonnet agreement on credit_relevant: **82.3%** (247/300 sample)
+   - Below 90% threshold, but all disagreements are Haiku over-labeling (cr=1→cr=0)
+   - Decision: ACCEPT AS-IS. For a credit early-warning system, false positives
+     (routine articles labeled credit-relevant) are cheap; false negatives (missed
+     real signals) are expensive. ~17.7% noise is tolerable — model evaluation
+     against held-back rating actions will reveal if it actually hurts.
+   - Sonnet overrides applied to all 313 audited articles
+   - Output: `data/processed/labels_final.jsonl` (17,274) + `labels_final.csv`
+8. ⏳ Spot-check 50 labels against rating_windows ground truth
+
+**Verification results:**
+- Parse error rate: **0.0%** across all phases (calibration, bulk, audit)
+- Haiku/Sonnet agreement on `credit_relevant`: **82.3%** on 300 stratified sample
+  - All disagreements are Haiku over-labeling (cr=1→cr=0): broker reports, routine
+    issuances, small debt recovery cases, business performance metrics
+  - Accepted: false positives are cheap for credit early-warning; evaluation against
+    rating actions will reveal if noise hurts model performance
+- Total labeling cost: ~$38 USD (calibration ~$1.50 + bulk ~$36 + audit ~$2)
+- After merge: spot-check 50 labels from `labels_final.csv` against `rating_windows` ground truth
+
+**Label fields:** credit_relevant (0/1), signal_direction (-1/0/+1), signal_type (liquidity, asset_quality, regulatory, contagion, governance, funding, operational, other), sector_wide (0/1), confidence (low/medium/high), reasoning (one sentence)
+
+**Ground truth:** rating_windows held back from LLM prompt — did entity get downgraded within 6 months? This is never shown to the labeling model (would be data leakage). Used only for post-hoc evaluation.
 
 ### 1.4 Training Data Format
 Follow FinRLlama instruction format:
