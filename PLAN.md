@@ -106,7 +106,7 @@ Phase 1.3 has 4 sub-steps. Steps 1-3 clean and filter raw GDELT data. Step 4 is 
 - Combined into final labeling input: 17,299 articles with body text
 - Output: `data/processed/gdelt_for_labeling.csv`
 
-#### Step 4: LLM Labeling Pipeline ✅ CODE COMPLETE — AWAITING EXECUTION
+#### Step 4: LLM Labeling Pipeline ✅ COMPLETE
 Three-phase Calibrate → Bulk → Audit pipeline (~$30-35 total).
 
 **Strategy:** Cheap model (Haiku) for volume, expensive model (Sonnet) for quality, merge for best of both.
@@ -221,7 +221,13 @@ gdelt_for_labeling.csv (17,299)
      against held-back rating actions will reveal if it actually hurts.
    - Sonnet overrides applied to all 313 audited articles
    - Output: `data/processed/labels_final.jsonl` (17,274) + `labels_final.csv`
-8. ⏳ Spot-check 50 labels against rating_windows ground truth
+8. ✅ Spot-check labels against rating_windows ground truth
+   - 17,009 articles matched to rating actions within 90 days
+   - **Deterioration recall: 75.5%** (3,543/4,694 articles near downgrades were flagged)
+   - **Deterioration precision: 56.4%** (time-window noise inflates false alarms — expected)
+   - Misses fall into 3 patterns: stock price articles (model correct), routine corporate actions (model correct), distress-era capital raises (model wrong — labels as improvement)
+   - Full report: `reports/phase1_label_quality.md`
+   - Sample for review: `data/processed/spotcheck_sample.csv` (50 stratified rows)
 
 **Verification results:**
 - Parse error rate: **0.0%** across all phases (calibration, bulk, audit)
@@ -231,22 +237,96 @@ gdelt_for_labeling.csv (17,299)
   - Accepted: false positives are cheap for credit early-warning; evaluation against
     rating actions will reveal if noise hurts model performance
 - Total labeling cost: ~$38 USD (calibration ~$1.50 + bulk ~$36 + audit ~$2)
-- After merge: spot-check 50 labels from `labels_final.csv` against `rating_windows` ground truth
+- Spot-check against rating_windows: 75.5% recall, 56.4% precision (see `reports/phase1_label_quality.md`)
 
 **Label fields:** credit_relevant (0/1), signal_direction (-1/0/+1), signal_type (liquidity, asset_quality, regulatory, contagion, governance, funding, operational, other), sector_wide (0/1), confidence (low/medium/high), reasoning (one sentence)
 
 **Ground truth:** rating_windows held back from LLM prompt — did entity get downgraded within 6 months? This is never shown to the labeling model (would be data leakage). Used only for post-hoc evaluation.
 
-### 1.4 Training Data Format
-Follow FinRLlama instruction format:
-```json
-{
-  "instruction": "Assess the credit risk signal in the following news article for Indian NBFCs.",
-  "input": "[article text]",
-  "output": "CREDIT_DETERIORATION | Reason: [specific credit-relevant factor]. Signal type: [type]. Affected entity: [name]. Sector-wide: [yes/no]."
-}
+### 1.4 Training Data Format ✅ DESIGN COMPLETE — AWAITING CODE
+
+**Design report:** `reports/phase1_4_training_data_design.md` (full rationale for all decisions)
+
+**Format:** Three-field JSONL (instruction / input / output) following FinGPT/FinRLlama convention.
+
+**Instruction** (fixed across all examples):
+> "Assess whether this news article contains signals relevant to the credit quality of the mentioned Indian financial institution."
+
+Why "financial institution" not "NBFC": corpus includes banks (YES Bank 1,590 articles, Lakshmi
+Vilas Bank 231, PMC Bank 59) and infrastructure finance (IL&FS 94). ~11% of articles are non-NBFC.
+
+**Input fields:** Entity + Date + Title + Article text (3,000 char truncation)
+
+**Output format:** Structured text with strict vocabulary and END stop token (not JSON).
+- JSON is all-or-nothing: one malformed brace loses the entire output
+- Structured text: each field on its own line, independently recoverable
+- END token teaches the model a hard stop; set as stop sequence during inference
+
+Credit-relevant article:
 ```
-**Target:** 5,000+ labeled examples. 70/15/15 train/val/test split.
+CREDIT_RELEVANT: Yes
+DIRECTION: Deterioration
+SIGNAL_TYPE: asset_quality
+SECTOR_WIDE: No
+CONFIDENCE: High
+REASONING: 11.4% of PFC's loan book entering insolvency with write-off risk.
+END
+```
+
+Not credit-relevant (short-form — model learns to reject quickly):
+```
+CREDIT_RELEVANT: No
+REASONING: Stock price movements with no credit quality information.
+END
+```
+
+Strict vocabulary (parser rejects anything outside these):
+- CREDIT_RELEVANT: Yes / No
+- DIRECTION: Deterioration / Improvement / Neutral
+- SIGNAL_TYPE: liquidity / asset_quality / regulatory / contagion / governance / funding / operational / other
+- SECTOR_WIDE: Yes / No
+- CONFIDENCE: Low / Medium / High
+
+**Class balancing:** Keep natural distribution (deterioration 70% of cr=1). Don't distort data.
+Adjust via loss weighting or threshold tuning in Phase 2 if needed.
+
+**Split strategy:** Temporal (date-based) to prevent data leakage.
+
+| Split | Date Range | Est. Articles | Purpose |
+|-------|-----------|------:|---------|
+| Train | 2017-04 to 2021-12 | ~10,600 | Crisis + recovery period |
+| Validation | 2022-01 to 2023-06 | ~2,100 | Hyperparameter tuning |
+| Test | 2023-07 to 2024-12 | ~2,700 | Forward evaluation + backtest |
+
+**Entity holdout diagnostic:** 3 entities removed entirely from training for a separate
+memorization test. Answers: "Did we learn text patterns or just entity names?"
+
+| Entity | Articles | Profile | Purpose |
+|--------|------:|---------|---------|
+| DHFL | 1,243 | 91% deterioration | Crisis detection on unseen entity |
+| Reliance Capital | 688 | 80% deterioration | Different crisis arc — generalization |
+| Cholamandalam | 1,372 | 22% credit-relevant | False positive control on stable entity |
+
+Multi-entity articles mentioning held-out entities stay in training (minor contamination, noted).
+
+**Output robustness check:** Two-phase approach.
+- Phase 1.4 (now): strict parser + comprehensive tests against synthetic edge cases
+- Phase 2.1 (Colab): run 1,000 base-model outputs through parser, iterate format if >20% fail
+
+**Files to create:**
+
+| File | Purpose |
+|------|---------|
+| `configs/training_config.yaml` | Split cutoffs, instruction text, field vocab, held-out entities |
+| `src/data/format_training.py` | Join labels + articles → instruction/input/output JSONL |
+| `src/data/parse_training_output.py` | Strict parser for structured text output format |
+| `tests/test_format_training.py` | Tests for formatter + parser |
+
+**Output files:**
+- `data/processed/train.jsonl`, `val.jsonl`, `test.jsonl` (main split)
+- `data/processed/entity_holdout.jsonl` (diagnostic set)
+
+**Total training examples:** 17,274 (all articles, cr=0 included as negative examples)
 
 ---
 

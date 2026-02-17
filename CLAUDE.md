@@ -76,15 +76,14 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 1 — Data Collection. Phase 0 complete. Phase 1.1, 1.2, and 1.3 Steps 1-4 (calibration + bulk) complete.
+Phase 1 — Data Collection. Phase 0 complete. Phase 1.1, 1.2, and 1.3 COMPLETE. Phase 1.4 DESIGN COMPLETE.
 
-**WHERE WE ARE NOW:** Phase 1.3 Step 4 — Calibration (300, Sonnet) and Bulk (17,299, Haiku) labeling DONE.
-11 few-shot examples added to config. Audit pipeline COMPLETE (targeted: 313 articles, 82.3% agreement).
-Final merged labels at `data/processed/labels_final.jsonl` (17,274 labels, 0 parse errors).
-See `PLAN.md` → Phase 1.3 → Step 4 execution checklist (steps 1-7 done, step 8 remains).
+**WHERE WE ARE NOW:** Phase 1.4 design finalized. All design decisions documented in
+`reports/phase1_4_training_data_design.md`. Ready to write code.
 
-**Immediate next action:** Spot-check 50 labels against rating_windows ground truth (Step 8),
-then move to Phase 1.4 (training data formatting).
+**Immediate next action:** Phase 1.4 — Write `format_training.py`, `parse_training_output.py`,
+`training_config.yaml`, and tests. Then run to produce `train.jsonl`, `val.jsonl`, `test.jsonl`,
+`entity_holdout.jsonl`.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -98,6 +97,13 @@ then move to Phase 1.4 (training data formatting).
 - Audit labels: `data/processed/labels_audit.jsonl` (313 Sonnet audit labels)
 - **Final labels: `data/processed/labels_final.jsonl` (17,274 merged, 0 parse errors)**
 - Final labels CSV: `data/processed/labels_final.csv` (for Excel review)
+
+**Presentation / Contest Reports:**
+The `reports/` directory collects analysis artifacts for the final FinAI 2026 submission and presentation.
+Add a new report at each major milestone (training eval, backtest results, contagion analysis, etc.).
+Current reports:
+- `reports/phase1_label_quality.md` — label quality spot-check, confusion matrix, miss patterns
+- `reports/phase1_4_training_data_design.md` — training data format design decisions, rationale, dataset stats
 
 **Key labeling scripts:**
 ```bash
