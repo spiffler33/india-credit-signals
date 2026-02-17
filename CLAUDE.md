@@ -76,16 +76,17 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 2 — Model Training. Phase 2.1 (Base Model Evaluation) ready to run on Colab.
+Phase 2 — Model Training. Phase 2.1 complete (0% base model parse rate). Phase 2.2 notebook ready.
 
-**WHERE WE ARE NOW:** Phase 1 fully complete. Phase 2.1 notebook and evaluation module created.
-Training data: `train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133), `entity_holdout.jsonl` (3,303).
-55 tests pass.
+**WHERE WE ARE NOW:** Phase 2.1 ran on Colab — Qwen 2.5-7B base model produces 0% parseable output
+(100% totally_unstructured free-form essays). Model understands credit concepts from pre-training
+but has never seen our structured format. Decision: PROCEED TO TRAINING.
+Phase 2.2 LoRA training notebook is ready to run on Colab.
 
-**Immediate next action:** Run `notebooks/phase2_1_base_model_eval.ipynb` on Colab.
-Upload data files to `drive/MyDrive/india-credit-signals/data/processed/` first.
-The notebook loads Qwen 2.5-7B in 4-bit, runs 1,000 examples, reports parse rate + GO/NO-GO.
-If parse rate >80% → proceed to LoRA training. If 20-80% → investigate failures. If <20% → simplify format.
+**Immediate next action:** Run `notebooks/phase2_2_lora_training.ipynb` on Colab (T4 GPU).
+Data files should already be on Drive from Phase 2.1: `drive/MyDrive/india-credit-signals/data/processed/`.
+The notebook trains LoRA adapters (~45-60 min), then evaluates on val/test/entity_holdout.
+Target: >80% parse rate (vs 0% baseline). Adapters save to `drive/MyDrive/india-credit-signals/data/models/qwen-credit-lora/`.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -138,3 +139,9 @@ python -m src.data.format_training               # produces train/val/test/entit
 **Key Phase 2.1 files:**
 - `src/training/evaluate.py` — canonical evaluation module (parser, failure taxonomy, per-entity holdout metrics)
 - `notebooks/phase2_1_base_model_eval.ipynb` — Colab notebook: Qwen 2.5-7B 4-bit → 1,000 examples → parse eval → GO/NO-GO
+
+**Key Phase 2.2 files:**
+- `notebooks/phase2_2_lora_training.ipynb` — Colab notebook: QLoRA training + val/test/holdout eval in one session
+  - LoRA: r=16, alpha=32, 5 target modules (q_proj, v_proj, gate_proj, up_proj, down_proj)
+  - SFTTrainer with assistant_only_loss, cosine lr=5e-4, 3 epochs, effective batch=16
+  - Qwen gotchas: pad≠eos, right-padding, no bos override, reentrant=False for grad checkpointing

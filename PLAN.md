@@ -314,7 +314,8 @@ Multi-entity articles mentioning held-out entities stay in training (minor conta
 
 **Output robustness check:** Two-phase approach.
 - ✅ Phase 1.4: strict parser + 37 tests against synthetic edge cases (all pass)
-- Phase 2.1 (Colab): run 1,000 base-model outputs through parser, iterate format if >20% fail
+- ✅ Phase 2.1 (Colab): 0% parse rate on base model — 100% totally_unstructured (free-form essays).
+  Format is unfamiliar but model understands credit concepts → proceed to LoRA training.
 
 **Files created:**
 
@@ -336,7 +337,7 @@ Multi-entity articles mentioning held-out entities stay in training (minor conta
 ## Phase 2: Model Training (Days 9-14)
 **Goal:** Fine-tune a model that distinguishes credit signals from generic sentiment.
 
-### 2.1 Base Model Evaluation ✅ READY (run on Colab)
+### 2.1 Base Model Evaluation ✅ COMPLETE
 **Primary:** Qwen 2.5-7B-Instruct (strong on financial text, multilingual for future Hindi extension)
 **Fallback:** LLaMA 3.1-8B-Instruct (more community support, FinRLlama was built on LLaMA)
 
@@ -354,20 +355,81 @@ Multi-entity articles mentioning held-out entities stay in training (minor conta
   6. Holdout scaffold: per-entity eval function ready for post-training use
   7. Decision: GO (>80%) / INVESTIGATE (20-80%) / NO-GO (<20%)
 
-**How to run:**
-1. Upload `data/processed/{train,val,test,entity_holdout}.jsonl` to `drive/MyDrive/india-credit-signals/data/processed/`
-2. Open `notebooks/phase2_1_base_model_eval.ipynb` in Colab
-3. Set runtime to GPU (T4 is fine, A100 is faster)
-4. Run all cells top-to-bottom (~20-45 min depending on GPU)
-5. Check the decision cell at the bottom
+**Results (2026-02-17):**
+- Parse success rate: **0.0%** (0/1,000)
+- Failure mode: 100% `totally_unstructured` — model writes free-form analyst paragraphs
+- Content quality: decent (catches NPAs, downgrades, credit ratings) but zero format compliance
+- Decision: **PROCEED TO TRAINING** — model understands credit concepts, just needs format training
+- Raw outputs saved: `drive/MyDrive/india-credit-signals/data/processed/base_model_outputs.jsonl`
 
-### 2.2 Training Configuration
-Adapt FinRLlama's training script:
-- LoRA: rank=16, alpha=32, target_modules=["q_proj", "v_proj"]
-- Learning rate: 2e-4 with cosine scheduler
-- Batch size: 4 (gradient accumulation 8)
-- Epochs: 3 (with early stopping on val loss)
-- Estimated cost: ~$50-100 on Colab Pro or Lambda Labs
+🎓 **Why 0% is fine:** The model has never seen our `CREDIT_RELEVANT: / DIRECTION: / END` format.
+It defaulted to what instruct models do — write helpful essays. LoRA fine-tuning on 9,591 examples
+will teach the format. The fact that it already understands credit concepts (from pre-training)
+means the training only needs to teach structure, not domain knowledge.
+
+### 2.2 LoRA Training
+**Notebook:** `notebooks/phase2_2_lora_training.ipynb` — Self-contained Colab notebook (10 cells).
+
+**Architecture decisions:**
+
+📐 **TRL SFTTrainer** (not custom training loop):
+- Handles Qwen's `<|im_start|>/<|im_end|>` chat template automatically
+- `assistant_only_loss=True` → loss only on assistant (output) tokens — model doesn't waste
+  gradient updates learning to reproduce the instruction/article text (~80% of token budget)
+- Integrates with HuggingFace Trainer for checkpointing, eval, best-model selection
+
+📐 **QLoRA on T4**: 4-bit NF4 base model + fp16/bf16 LoRA adapters.
+- Peak VRAM: ~10-12 GB, fits T4 (15GB) with gradient checkpointing
+- Gradient checkpointing trades ~30% training speed for ~40% VRAM savings
+
+📐 **lr=5e-4** (not 2e-4 as originally planned):
+- QLoRA needs higher lr because gradients pass through quantized weights with reduced precision
+- 5e-4 is the QLoRA paper's recommended starting point
+- Cosine schedule with 100 warmup steps ramps up gently
+
+**Training configuration:**
+- **LoRA:** r=16, alpha=32, dropout=0.05
+- **Target modules:** q_proj, v_proj (attention) + gate_proj, up_proj, down_proj (MLP) — 5 of 7
+- **MLP rationale:** gate/up/down control vocabulary and output distribution, critical for
+  learning our structured format (CREDIT_RELEVANT: Yes/No, specific vocab words)
+- **Training:** 3 epochs, batch=4, grad_accum=4 (effective batch=16), cosine scheduler
+- **Eval:** every 500 steps, save best model on val loss, load best at end
+- **Sequence length:** 2048 tokens (longest example ~1,200 tokens, generous headroom)
+- **Precision:** bf16 on Ampere+ (A100), fp16 on Turing (T4) — automatic detection
+- **Adapter size:** ~33MB saved to Drive (not the full 14GB model)
+
+**Data format:**
+- instruction/input/output JSONL → messages format (system/user/assistant roles)
+- SFTTrainer applies Qwen chat template and masks instruction+input tokens from loss
+
+**Qwen-specific gotchas handled:**
+1. `pad_token (151643) ≠ eos_token (151645)` — prevents loss masking corruption
+2. No bos_token override — prevents double-bot artifact
+3. `padding_side="right"` — causal LMs need right-padding
+4. `gradient_checkpointing_kwargs={"use_reentrant": False}` — required for LoRA compat
+5. `max_seq_length=2048` — covers all examples with headroom
+
+**Evaluation cells (same notebook):**
+- Cell 8: 500 validation examples (stratified) → parse rate + field accuracy
+- Cell 9: 500 test examples (forward-looking 2023-07 to 2024-12) → the honest number
+- Cell 10: Full entity holdout (3,303 examples) → per-entity precision/recall
+  - DHFL (1,243, 91% det.) — crisis detection on unseen entity
+  - Reliance Capital (688, 80% det.) — generalization across crisis types
+  - Cholamandalam (1,372, 12% det.) — false positive control on stable NBFC
+
+**Estimated cost:** ~$0 on Colab Pro subscription (T4, ~45-60 min training + ~30 min eval)
+
+**Files:**
+
+| File | Purpose |
+|------|---------|
+| `notebooks/phase2_2_lora_training.ipynb` | Self-contained training + evaluation notebook |
+
+**Output files (saved to Drive):**
+- `data/models/qwen-credit-lora/` — LoRA adapters + tokenizer (~33MB)
+- `data/processed/finetuned_val_outputs.jsonl` — val set predictions
+- `data/processed/finetuned_test_outputs.jsonl` — test set predictions
+- `data/processed/finetuned_holdout_outputs.jsonl` — entity holdout predictions
 
 ### 2.3 RLMF Adaptation (Advanced — Week 3)
 Instead of market feedback (price movements), use **rating feedback**:
