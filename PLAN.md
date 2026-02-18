@@ -20,7 +20,7 @@ Model: https://huggingface.co/Arnav-Gr0ver/FinRLlama-3.2-3B-Instruct
 ```
 - ✅ Cloned repo, read every file, documented the full pipeline architecture
 - ✅ Ran Qwen 2.5-3B baseline on Colab — generic sentiment OK, credit signals poor
-- ⏳ FinRLlama inference blocked — Meta LLaMA access pending (not a blocker, moving on)
+- ✅ Meta LLaMA 3.2 access approved (2026-02-13). FinRLlama inference deferred to Phase 2.4 as baseline.
 - **Learning checkpoint:** You should be able to explain LoRA rank, learning rate schedules, and what RLMF does differently from standard SFT
 
 ### 0.2 Clone & Read FinGPT ✅ DONE
@@ -367,8 +367,9 @@ It defaulted to what instruct models do — write helpful essays. LoRA fine-tuni
 will teach the format. The fact that it already understands credit concepts (from pre-training)
 means the training only needs to teach structure, not domain knowledge.
 
-### 2.2 LoRA Training
+### 2.2 LoRA Training ✅ COMPLETE
 **Notebook:** `notebooks/phase2_2_lora_training.ipynb` — Self-contained Colab notebook (10 cells).
+**Training report:** `reports/phase2_2_training_results.md`
 
 **Architecture decisions:**
 
@@ -396,7 +397,7 @@ means the training only needs to teach structure, not domain knowledge.
 - **Eval:** every 500 steps, save best model on val loss, load best at end
 - **Sequence length:** 2048 tokens (longest example ~1,200 tokens, generous headroom)
 - **Precision:** bf16 on Ampere+ (A100), fp16 on Turing (T4) — automatic detection
-- **Adapter size:** ~33MB saved to Drive (not the full 14GB model)
+- **Adapter size:** 152.8 MB saved to Drive (5 target modules × r=16)
 
 **Data format:**
 - instruction/input/output JSONL → messages format (system/user/assistant roles)
@@ -417,16 +418,56 @@ means the training only needs to teach structure, not domain knowledge.
   - Reliance Capital (688, 80% det.) — generalization across crisis types
   - Cholamandalam (1,372, 12% det.) — false positive control on stable NBFC
 
-**Estimated cost:** ~$0 on Colab Pro subscription (T4, ~45-60 min training + ~30 min eval)
+**Estimated cost:** ~$0 on Colab Pro subscription (T4)
+
+**Training results (2026-02-19):**
+- 145 min training on T4, 1,800 steps (3 epochs)
+- Best checkpoint at **step 500** (~0.83 epochs) — overfitting after that
+  - Val loss: 1.49 (step 500) → 1.50 (step 1000) → 1.57 (step 1500)
+  - `load_best_model_at_end` auto-rolled back to step 500
+- Format learned perfectly in <1 epoch (0% → 100% parse rate)
+
+| Split | Parse Rate | CR Acc | Direction | Signal Type | Sector Wide | Confidence |
+|-------|-----------|--------|-----------|-------------|-------------|------------|
+| Base model (2.1) | 0.0% | — | — | — | — | — |
+| Validation (500) | 100.0% | 83.0% | 80.3% | 84.5% | 95.7% | 70.0% |
+| Test (500) | 99.6% | 89.8% | 77.2% | 76.8% | 93.4% | 58.3% |
+| Entity holdout (3,303) | 100.0% | 92.7% | 92.3% | 70.6% | 90.0% | 92.6% |
+
+**Per-entity holdout results:**
+
+| Entity | CR Acc | Dir Acc | Det. Precision | Det. Recall | Verdict |
+|--------|--------|---------|----------------|-------------|---------|
+| DHFL (1,243) | 97.3% | 96.5% | 96.3% | 97.7% | Excellent — spots unseen crisis |
+| Reliance Capital (688) | 93.9% | 87.5% | 90.4% | 90.0% | Strong — generalizes across crisis types |
+| Cholamandalam (1,372) | 87.9% | 83.7% | 67.0% | 73.6% | Moderate — 33% false positive rate on stable NBFC |
+
+**Key findings:**
+1. **Format learning is solved.** 0% → 100% parse rate. Structured text output > JSON confirmed.
+2. **Crisis detection works on unseen entities.** DHFL 97.7% recall proves the model learned
+   distress language patterns, not entity names.
+3. **Generalization confirmed.** Reliance Capital (different crisis arc) still gets 90% det. recall.
+4. **False positives on stable NBFCs** are the main weakness. Cholamandalam's 33% det. false positive
+   rate likely inherited from Haiku over-labeling (82.3% agreement). Manageable with confidence
+   thresholds or cleaner training data.
+5. **Signal type is inherently ambiguous** (70.6%). Categories overlap (liquidity vs asset_quality
+   vs contagion). May not be improvable — and may not need to be for the use case.
+6. **Overfitting after <1 epoch.** Best checkpoint was step 500 of 1,800. For next fine-tune:
+   use 1 epoch + early stopping to save Colab time.
+
+**Decision: PROCEED TO BACKTESTING.** The SFT model is strong enough. RLMF (Phase 2.3) is
+optional polish, not a prerequisite. Priority is Phase 2.4: backtest against actual rating actions
+to measure lead time and real-world false positive rates.
 
 **Files:**
 
 | File | Purpose |
 |------|---------|
 | `notebooks/phase2_2_lora_training.ipynb` | Self-contained training + evaluation notebook |
+| `reports/phase2_2_training_results.md` | Full training results report |
 
 **Output files (saved to Drive):**
-- `data/models/qwen-credit-lora/` — LoRA adapters + tokenizer (~33MB)
+- `data/models/qwen-credit-lora/` — LoRA adapters + tokenizer (152.8 MB)
 - `data/processed/finetuned_val_outputs.jsonl` — val set predictions
 - `data/processed/finetuned_test_outputs.jsonl` — test set predictions
 - `data/processed/finetuned_holdout_outputs.jsonl` — entity holdout predictions
@@ -443,6 +484,10 @@ Instead of market feedback (price movements), use **rating feedback**:
 - **Lead time:** How many days/weeks before the rating action did the model flag it?
 - **False positive rate:** How many entities flagged but NOT downgraded?
 - **Baseline comparison:** Prompted Opus on same test set (is fine-tuning actually better?)
+- **FinRLlama baseline:** Run FinRLlama 3.2-3B (Meta access approved 2026-02-13) on test set.
+  This is a finance-tuned LLaMA — strong at general financial sentiment but not credit-specific.
+  Comparison table for contest: Base Qwen (0% parse) vs FinRLlama vs Our LoRA.
+  Shows that generic financial fine-tuning ≠ credit signal extraction — our contribution.
 
 ---
 

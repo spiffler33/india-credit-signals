@@ -76,17 +76,20 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 2 — Model Training. Phase 2.1 complete (0% base model parse rate). Phase 2.2 notebook ready.
+Phase 2 — Model Training. Phase 2.2 LoRA training COMPLETE. Proceeding to evaluation/backtest.
 
-**WHERE WE ARE NOW:** Phase 2.1 ran on Colab — Qwen 2.5-7B base model produces 0% parseable output
-(100% totally_unstructured free-form essays). Model understands credit concepts from pre-training
-but has never seen our structured format. Decision: PROCEED TO TRAINING.
-Phase 2.2 LoRA training notebook is ready to run on Colab.
+**WHERE WE ARE NOW:** Phase 2.2 LoRA training ran on Colab (T4, 145 min). Results:
+- Parse rate: 0% → 100% (format learning solved in <1 epoch)
+- Entity holdout: DHFL 97.7% det. recall (unseen entity), Chola 33% false positive rate
+- Best checkpoint at step 500 of 1,800 (overfitting after ~0.83 epochs)
+- Adapters saved: `drive/MyDrive/india-credit-signals/data/models/qwen-credit-lora/` (152.8 MB)
+- Full results: `reports/phase2_2_training_results.md`
 
-**Immediate next action:** Run `notebooks/phase2_2_lora_training.ipynb` on Colab (T4 GPU).
-Data files should already be on Drive from Phase 2.1: `drive/MyDrive/india-credit-signals/data/processed/`.
-The notebook trains LoRA adapters (~45-60 min), then evaluates on val/test/entity_holdout.
-Target: >80% parse rate (vs 0% baseline). Adapters save to `drive/MyDrive/india-credit-signals/data/models/qwen-credit-lora/`.
+**Decision:** SFT model is strong enough. Skip RLMF (Phase 2.3) for now — proceed to backtesting.
+
+**Immediate next action:** Phase 2.4 — Backtest against actual rating actions.
+Measure lead time (how many days before a downgrade did the model flag it?) and real-world
+false positive rates. Then run baseline comparisons (prompted Opus, FinRLlama).
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -110,6 +113,7 @@ Add a new report at each major milestone (training eval, backtest results, conta
 Current reports:
 - `reports/phase1_label_quality.md` — label quality spot-check, confusion matrix, miss patterns
 - `reports/phase1_4_training_data_design.md` — training data format design decisions, rationale, dataset stats
+- `reports/phase2_2_training_results.md` — LoRA training results, per-entity holdout, lessons learned
 
 **Key labeling scripts:**
 ```bash
@@ -145,3 +149,11 @@ python -m src.data.format_training               # produces train/val/test/entit
   - LoRA: r=16, alpha=32, 5 target modules (q_proj, v_proj, gate_proj, up_proj, down_proj)
   - SFTTrainer with assistant_only_loss, cosine lr=5e-4, 3 epochs, effective batch=16
   - Qwen gotchas: pad≠eos, right-padding, no bos override, reentrant=False for grad checkpointing
+  - Results: 100% parse rate, 97.7% det. recall on unseen DHFL, best checkpoint at step 500
+- `reports/phase2_2_training_results.md` — full training results report with per-entity analysis
+
+**Phase 2.2 output files (on Google Drive):**
+- `data/models/qwen-credit-lora/` — LoRA adapters + tokenizer (152.8 MB)
+- `data/processed/finetuned_val_outputs.jsonl` — val set predictions (500 examples)
+- `data/processed/finetuned_test_outputs.jsonl` — test set predictions (500 examples)
+- `data/processed/finetuned_holdout_outputs.jsonl` — entity holdout predictions (3,303 examples)
