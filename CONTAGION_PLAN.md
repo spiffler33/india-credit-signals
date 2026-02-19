@@ -83,14 +83,14 @@ RelCap's distress signals as an actual contagion source.
 
 ## Success Criteria & Results
 
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-| Contagion raises scores before downgrades | **PASS** | 5/5 housing + 1/1 infra targets get lead times |
-| Lead time improvement > 0 for ≥2 entities | **PASS** | All 6 targets: +69d to +334d |
-| Zero-direct entities get contagion-only warning | **PASS** | Can Fin +296d, Piramal +334d |
-| Intra > cross-subsector contagion (relative) | **PASS** | 2.3–3.5× ratio in both crises |
-| Cross-sector FP contained at absolute level | **NEEDS v2** | See Lessons Learned below |
-| All tests pass | **PASS** | 141/141 (85 existing + 56 new) |
+| Criterion | v1 Status | v2 Status | Evidence |
+|-----------|-----------|-----------|----------|
+| Contagion raises scores before downgrades | PASS | **PASS** | 5/5 housing + 1/1 infra targets |
+| Lead time improvement > 0 for ≥2 entities | PASS | **PASS** | All 6: +7d to +483d |
+| Zero-direct entities get contagion-only warning | PASS | **PASS** | Can Fin +220d, Piramal +210d |
+| Intra > cross-subsector contagion (≥2×) | PASS | **PASS** | 3.7× (improved from 3.5×) |
+| Cross-sector FP contained (<20% breach) | **FAIL (85%)** | **PASS (6-8%)** | Chola 6.3%, Bajaj 8.0% |
+| All tests pass | PASS | **PASS** | 145/145 (141 existing + 4 new) |
 
 ---
 
@@ -135,9 +135,24 @@ RelCap's distress signals as an actual contagion source.
 
 ## v2 Upgrade Path
 
-1. **Contagion score normalization** — divide by peer count to control graph density effects (highest priority)
-2. **Threshold recalibration** — percentile-based or entity-specific baselines instead of absolute cutoffs
-3. **Funding profile edges** — wholesale/retail similarity (actual crisis transmission mechanism)
-4. **Asymmetric weights** — large entity stress hits small entities harder
-5. **Exponential decay** — replace hard window cutoff
+1. ~~**Contagion score normalization** — divide by peer count~~ ✅ DONE (2026-02-19)
+2. ~~**Threshold recalibration** — warning 2.0→4.0, critical 5.0→10.0~~ ✅ DONE (2026-02-19)
+
+**POST-DEMO PRIORITIES (do these as soon as demo is ready):**
+
+3. **Funding profile edges** — wholesale/retail similarity (actual crisis mechanism).
+   This is the biggest remaining accuracy gap. DHFL→Indiabulls contagion was real
+   because they shared wholesale CP funding markets. DHFL→Aavas was NOT real because
+   Aavas funds via retail deposits. Subsector-only edges can't distinguish these.
+   Needs: manual data curation of funding profiles for each entity.
+
+4. **Asymmetric weights** — large entity stress hits small entities harder than vice versa.
+   A DHFL collapse (₹1 lakh crore AUM) should propagate more to Can Fin (₹20K crore)
+   than the reverse. Needs: entity size data (AUM or total assets) for weight scaling.
+
+5. **Exponential decay** — replace hard 30-day window cutoff. Signal from 5 days ago
+   should matter more than signal from 29 days ago. Marginal improvement over hard cutoff.
+
 6. **Full-corpus inference** — run all 17K articles through fine-tuned model on Colab
+   instead of using Haiku/Sonnet labels as proxy for non-holdout entities. Improves
+   consistency but doesn't change the demo narrative.

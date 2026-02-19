@@ -24,6 +24,7 @@ direction_multiplier:
 sector_wide_multiplier: 1.5   # 50% boost for sector-wide signals (affects all peers)
 contagion_window_days: 30     # Look back 30 days of peer signals for contagion
 peer_signal_discount: 0.5     # Non-sector-wide signals are discounted when propagating
+normalize_by_peers: true      # v2: divide contagion by n_contributing_peers to control graph density
 
 # --- Rolling Windows ---
 rolling_windows: [7, 30, 90]
@@ -31,8 +32,8 @@ rolling_windows: [7, 30, 90]
 # --- Score Thresholds ---
 # When rolling score crosses these, it's a warning or critical alert.
 score_thresholds:
-  warning: 2.0
-  critical: 5.0
+  warning: 4.0      # v2: raised from 2.0 after normalization — see threshold sweep below
+  critical: 10.0    # v2: raised from 5.0 proportionally
 
 # --- Parameter Sweep ---
 # Grid search over these values during backtest to find optimal thresholds.

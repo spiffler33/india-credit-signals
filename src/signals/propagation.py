@@ -106,17 +106,18 @@ def compute_contagion_scores(
     # 🎓 KEY CONCEPT: Contagion Propagation
     #
     # For each entity E on each day D:
-    #   contagion_score(E, D) = SUM over peers P:
+    #   raw_contagion(E, D) = SUM over peers P:
     #       edge_weight(P, E)  ×  rolling_direct(P, D, window)  ×  peer_discount
     #
-    # rolling_direct(P, D, window) = sum of P's direct scores in [D - window, D]
+    # v2 normalization (normalize_by_peers=True):
+    #   contagion_score(E, D) = raw_contagion(E, D) / n_contributing_peers(E, D)
     #
-    # peer_discount = 0.5 for non-sector-wide signals. Sector-wide signals propagate
-    # at full strength because they affect the entire subsector by definition.
-    #
-    # Example: DHFL has direct_score=3.0 on Nov 15 2018 (accumulated over 30-day window).
-    # Indiabulls (same subsector, weight=0.8) gets contagion = 0.8 × 3.0 × 0.5 = 1.2.
-    # If DHFL's signals were sector-wide: 0.8 × 3.0 × 1.0 = 2.4.
+    # 🎓 WHY NORMALIZE? In a 44-entity graph, each entity has 32-43 peers.
+    # Without normalization, contagion scores scale with graph density:
+    # Chola (diversified) accumulates contagion from 30+ peers → peak ~65.
+    # Normalized: 65 / 30 ≈ 2.2. Now the warning threshold (2.0) is meaningful.
+    # The key insight: one loud DHFL signal via intra-sector edge (0.8) should
+    # outweigh 30 tiny cross-sector whispers (0.1 each), even if whispers sum higher.
 
     Args:
         direct_df: Output of compute_direct_scores()
@@ -128,6 +129,7 @@ def compute_contagion_scores(
     """
     window_days = config.get("contagion_window_days", 30)
     peer_discount = config.get("peer_signal_discount", 0.5)
+    normalize = config.get("normalize_by_peers", True)  # v2 default: normalize
 
     if len(direct_df) == 0:
         return pd.DataFrame(columns=[
@@ -196,10 +198,16 @@ def compute_contagion_scores(
                         top_source_name = peer_name
 
             if total_contagion != 0:
+                # 🎓 v2 normalization: divide by contributing peer count to control
+                # for graph density. Without this, entities with 40 peers accumulate
+                # 40× more contagion than those with 5. Normalized score = "average
+                # contagion per contributing peer" — interpretable and threshold-stable.
+                score = total_contagion / n_sources if normalize and n_sources > 0 else total_contagion
+
                 contagion_rows.append({
                     "entity": entity,
                     "date": date,
-                    "contagion_score": total_contagion,
+                    "contagion_score": score,
                     "n_sources": n_sources,
                     "top_source": top_source_name,
                 })

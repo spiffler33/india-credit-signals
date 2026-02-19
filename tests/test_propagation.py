@@ -298,6 +298,117 @@ class TestContagionPropagation:
 
 
 # ============================================================
+# Test: v2 Normalization (peer-count normalization)
+# ============================================================
+
+class TestContagionNormalization:
+    """Tests for v2 contagion normalization by contributing peer count.
+
+    # 🎓 WHY THIS: v1 contagion accumulated raw sums from all contributing peers.
+    # With 44 entities, cross-sector controls (Chola, Bajaj) breached the warning
+    # threshold on 85% of crisis days — not because of real spillover, but because
+    # they had ~30 contributing peers each adding small amounts.
+    # v2 divides by n_contributing_peers to get "average contagion per peer."
+    """
+
+    def test_single_source_unchanged(
+        self, single_signal_df: pd.DataFrame, mini_graph: EntityGraph,
+        default_config: dict,
+    ) -> None:
+        """With 1 contributing source, normalization is a no-op (x / 1 = x)."""
+        direct_df = compute_direct_scores(single_signal_df, default_config)
+        # Default config has normalize_by_peers=True (or unset → defaults True)
+        contagion_df = compute_contagion_scores(direct_df, mini_graph, default_config)
+
+        indiabulls = contagion_df[contagion_df["entity"] == "Indiabulls HF"]
+        # 0.8 × 1.0 × 0.5 = 0.4, divided by 1 source = 0.4
+        assert indiabulls.iloc[0]["contagion_score"] == pytest.approx(0.4)
+        assert indiabulls.iloc[0]["n_sources"] == 1
+
+    def test_multi_source_normalized(self, mini_graph: EntityGraph, default_config: dict) -> None:
+        """With 2 contributing sources, contagion is averaged across them.
+
+        # 🎓 This is the core normalization test. If DHFL and PNB Housing both
+        # have direct signals, Indiabulls gets contagion from both. v1 would sum
+        # both contributions. v2 divides by 2.
+        """
+        df = pd.DataFrame([
+            {"entity": "DHFL", "date": pd.Timestamp("2018-11-15"),
+             "credit_relevant": 1, "direction": "Deterioration",
+             "signal_type": "liquidity", "sector_wide": False, "confidence": "High"},
+            {"entity": "PNB Housing", "date": pd.Timestamp("2018-11-15"),
+             "credit_relevant": 1, "direction": "Deterioration",
+             "signal_type": "asset_quality", "sector_wide": False, "confidence": "High"},
+        ])
+        direct_df = compute_direct_scores(df, default_config)
+
+        # With normalization ON (default)
+        config_norm = dict(default_config)
+        config_norm["normalize_by_peers"] = True
+        contagion_df = compute_contagion_scores(direct_df, mini_graph, config_norm)
+
+        indiabulls = contagion_df[contagion_df["entity"] == "Indiabulls HF"]
+        assert len(indiabulls) > 0
+        # DHFL → Indiabulls: 0.8 × 1.0 × 0.5 = 0.4
+        # PNB  → Indiabulls: 0.8 × 1.0 × 0.5 = 0.4
+        # Raw sum = 0.8, n_sources = 2
+        # Normalized = 0.8 / 2 = 0.4
+        assert indiabulls.iloc[0]["contagion_score"] == pytest.approx(0.4)
+        assert indiabulls.iloc[0]["n_sources"] == 2
+
+    def test_multi_source_unnormalized(self, mini_graph: EntityGraph, default_config: dict) -> None:
+        """With normalization OFF, raw sum is preserved (v1 behavior)."""
+        df = pd.DataFrame([
+            {"entity": "DHFL", "date": pd.Timestamp("2018-11-15"),
+             "credit_relevant": 1, "direction": "Deterioration",
+             "signal_type": "liquidity", "sector_wide": False, "confidence": "High"},
+            {"entity": "PNB Housing", "date": pd.Timestamp("2018-11-15"),
+             "credit_relevant": 1, "direction": "Deterioration",
+             "signal_type": "asset_quality", "sector_wide": False, "confidence": "High"},
+        ])
+        direct_df = compute_direct_scores(df, default_config)
+
+        # With normalization OFF (v1 behavior)
+        config_v1 = dict(default_config)
+        config_v1["normalize_by_peers"] = False
+        contagion_df = compute_contagion_scores(direct_df, mini_graph, config_v1)
+
+        indiabulls = contagion_df[contagion_df["entity"] == "Indiabulls HF"]
+        # DHFL → Indiabulls: 0.4, PNB → Indiabulls: 0.4, raw sum = 0.8
+        assert indiabulls.iloc[0]["contagion_score"] == pytest.approx(0.8)
+
+    def test_normalization_preserves_ratio(
+        self, mini_graph: EntityGraph, default_config: dict,
+    ) -> None:
+        """Intra/cross ratio should be preserved (or improved) by normalization.
+
+        # 🎓 The whole point: relative differentiation should survive normalization.
+        # Indiabulls (intra, weight=0.8) should still score higher than Chola (cross, 0.1).
+        """
+        df = pd.DataFrame([
+            {"entity": "DHFL", "date": pd.Timestamp("2018-11-15"),
+             "credit_relevant": 1, "direction": "Deterioration",
+             "signal_type": "liquidity", "sector_wide": False, "confidence": "High"},
+        ])
+        direct_df = compute_direct_scores(df, default_config)
+
+        config_norm = dict(default_config)
+        config_norm["normalize_by_peers"] = True
+        contagion_df = compute_contagion_scores(direct_df, mini_graph, config_norm)
+
+        indiabulls = contagion_df[contagion_df["entity"] == "Indiabulls HF"]
+        chola = contagion_df[contagion_df["entity"] == "Chola"]
+
+        # Both have 1 source (DHFL), so normalization is x/1 = x
+        # Indiabulls: 0.8 × 1.0 × 0.5 / 1 = 0.4
+        # Chola: 0.1 × 1.0 × 0.5 / 1 = 0.05
+        # Ratio: 0.4 / 0.05 = 8× (same as v1)
+        assert indiabulls.iloc[0]["contagion_score"] > chola.iloc[0]["contagion_score"]
+        ratio = indiabulls.iloc[0]["contagion_score"] / chola.iloc[0]["contagion_score"]
+        assert ratio >= 2.0  # Must maintain at least 2× differentiation
+
+
+# ============================================================
 # Test: Rolling Windows
 # ============================================================
 
