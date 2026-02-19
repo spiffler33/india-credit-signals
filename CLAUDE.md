@@ -76,22 +76,23 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 3 — Contagion Layer. Phases 0–2 COMPLETE. Building sector-level signal propagation.
+Phase 4 — Dashboard & Demo. Phases 0–3 COMPLETE.
 
-**WHERE WE ARE NOW:** Phase 2.4 backtest COMPLETE. The fine-tuned model catches every
-DHFL and Reliance Capital downgrade/default with 90-180 day lead time. Cholamandalam
-(stable NBFC, zero downgrades) gets 13% false positive rate. Best alert threshold:
-N≥5 signals in 14-day window → 79% precision, 73% recall, F1=0.760.
+**WHERE WE ARE NOW:** Phase 3 contagion layer COMPLETE. The system propagates credit
+distress from one entity to its sector peers. When DHFL collapsed, contagion provided
+the ONLY early warning for Can Fin Homes (+296d) and Piramal (+334d) — both had zero
+direct signals. Intra-subsector entities get 2.3-3.5× more contagion than cross-sector.
+141 tests pass (85 existing + 56 new).
 
 **Project direction:** This is being built as a **real work tool** — not just a contest entry.
 Goal: demonstrate to global head that LLM-based credit signal extraction + sector contagion
 is the direction of travel for risk alerting systems. Data science team may extend to other
-sectors. Priority order: (1) contagion layer, (2) dashboard/demo, (3) inference pipeline.
+sectors. Priority order: ~~(1) contagion layer~~, (1) dashboard/demo, (2) inference pipeline,
+(3) contagion v2 improvements (score normalization, threshold recalibration).
 
-**Immediate next action:** Phase 3 — Contagion Layer. When DHFL collapses, propagate risk
-signals to other housing finance NBFCs (Piramal, PNB Housing, Indiabulls) based on shared
-subsector, funding profile, and asset class exposure. This is what makes it a *sector-level*
-early warning system, not just a single-entity classifier.
+**Immediate next action:** Phase 4 — Streamlit dashboard. Key views: entity timeline
+(signals vs rating actions), sector heatmap, contagion network graph, alert feed.
+Build on Phase 2.4 backtest data + Phase 3 contagion scores.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -118,6 +119,7 @@ Current reports:
 - `reports/phase2_2_training_results.md` — LoRA training results, per-entity holdout, lessons learned
 - `reports/phase2_4_backtest_results.md` — backtest vs actual rating actions, lead times, alert thresholds
 - `reports/phase2_4_backtest_test_results.md` — test set backtest (limited, quiet period)
+- `reports/phase3_contagion_results.md` — contagion backtest: 2 crises, 6 targets, lead time improvements
 
 **Key labeling scripts:**
 ```bash
@@ -168,6 +170,23 @@ python -m src.data.format_training               # produces train/val/test/entit
 - `tests/test_backtest.py` — 30 unit tests (synthetic data + known DHFL dates)
 - `reports/phase2_4_backtest_results.md` — holdout backtest results (DHFL 100% coverage, 160d mean lead)
 - `BACKTEST_PLAN.md` — durable plan reference for Phase 2.4
+
+**Key Phase 3 files:**
+- `src/signals/entity_graph.py` — entity graph: 44 nodes, 946 edges, subsector-based weights
+- `src/signals/propagation.py` — direct scoring + contagion propagation + rolling windows
+- `src/signals/contagion_backtest.py` — crisis replay engine + report generation
+- `configs/contagion_config.yaml` — weights, windows, thresholds, 2 crisis definitions
+- `tests/test_entity_graph.py` — 23 tests
+- `tests/test_propagation.py` — 20 tests
+- `tests/test_contagion_backtest.py` — 13 tests
+- `CONTAGION_PLAN.md` — durable plan reference with lessons learned
+
+**Phase 3 headline results:**
+- IL&FS/DHFL crisis: 5/5 housing finance targets get contagion lead times (280-587d)
+- Can Fin Homes (+296d) and Piramal (+334d) had ZERO direct signals — contagion only
+- SREI/RelCap crisis: SREI Equipment +71d improvement
+- Intra-subsector gets 2.3-3.5× more contagion than cross-subsector
+- v2 needed: threshold recalibration for dense graph (cross-sector controls breach 85% of days)
 
 **Phase 2.4 headline results:**
 - DHFL: 23/23 rating actions had prior signals, mean 160-day lead time, first signal Nov 4 2018

@@ -519,7 +519,7 @@ build-vs-buy decision (prompted Opus vs LoRA vs FinRLlama).
 
 ---
 
-## Phase 3: Contagion Layer ← NEXT
+## Phase 3: Contagion Layer ✅ COMPLETE
 **Goal:** When one NBFC shows distress signals, propagate warnings to similar entities.
 This is what makes the system a *sector-level* early warning tool, not just a single-entity
 classifier. The pitch to the global head: "The system didn't just catch DHFL. It would have
@@ -530,34 +530,66 @@ The IL&FS/DHFL crisis didn't stay contained. It spread through housing finance (
 Indiabulls, Piramal), then infrastructure (SREI), then broader NBFCs. A contagion layer
 captures this cascade effect automatically.
 
-### 3.1 Entity Graph
-Build a simple graph of Indian NBFCs:
-- Nodes: Each NBFC (name, type, size, primary asset class)
-- Edges: Shared characteristics (funding profile, asset class exposure, geography)
-- Weight: Similarity score (two housing finance NBFCs are more connected than a housing NBFC and a gold loan NBFC)
-- Data source: Manual curation from RBI/SEBI data + our 39-entity dataset
+**Full plan:** `CONTAGION_PLAN.md`
+**Report:** `reports/phase3_contagion_results.md`
 
-### 3.2 Contagion Rules
-```python
-# When entity X gets a credit signal:
-if signal.sector_wide:
-    for entity in same_subsector(X):
-        entity.score += signal.strength * edge_weight(X, entity)
+### 3.1 Entity Graph ✅ DONE
+- 44 NBFC entities across 6 subsectors → weighted adjacency graph (946 edges)
+- Edge weights: intra-subsector=0.8, cross-subsector=0.1 (subsector-only v1)
+- Alias resolution for entity name matching across data sources
+- `src/signals/entity_graph.py` + `tests/test_entity_graph.py` (23 tests)
 
-# When RBI issues regulatory change:
-for entity in affected_entities(regulation):
-    entity.score += regulation.impact * entity.exposure
-```
+### 3.2 Signal Propagation ✅ DONE
+- Direct scoring: `direction_multiplier × confidence_weight × sector_wide_bonus`
+- Contagion: `edge_weight(P,E) × rolling_direct(P, D, window) × peer_discount`
+- Additive (not multiplicative) — entities with zero direct signals still get contagion
+- `src/signals/propagation.py` + `tests/test_propagation.py` (20 tests)
 
-### 3.3 Rolling Scores
-- Per-entity: 7-day, 30-day, 90-day rolling average of signal scores
-- Per-subsector: Housing finance, infrastructure, microfinance, vehicle finance
-- Threshold alerts: When rolling score crosses warning/critical thresholds
+### 3.3 Contagion Backtest ✅ DONE
+Two crisis replays validated:
 
-### 3.4 Backtest Validation
-- Replay 2018-2019 crisis: does contagion correctly flag housing finance sector
-  after DHFL signals appear?
-- Do SREI/Piramal get elevated scores before their own downgrades?
+**IL&FS/DHFL 2018-19 (housing finance):**
+
+| Target Entity | First Action | Lead Time | Improvement | Notes |
+|---------------|-------------|-----------|-------------|-------|
+| PNB Housing | 2020-02-21 | 587d | **+149d** | Contagion added 5 months |
+| Indiabulls HF | 2019-08-30 | 412d | **+69d** | Direct + contagion |
+| Piramal | 2019-05-07 | 334d | **+334d** | Zero direct — contagion only |
+| Can Fin Homes | 2019-05-06 | 296d | **+296d** | Zero direct — contagion only |
+| Reliance Home Finance | 2019-04-03 | 280d | **+83d** | Direct + contagion |
+
+**SREI/RelCap 2019-22 (infrastructure):**
+
+| Target Entity | First Action | Lead Time | Improvement |
+|---------------|-------------|-----------|-------------|
+| SREI Equipment | 2020-06-03 | 364d | **+71d** |
+
+**Key results:**
+- Intra-subsector entities get 2.3-3.5× more contagion than cross-subsector (edge weight works)
+- Can Fin Homes and Piramal had ZERO direct signals — contagion was their ONLY early warning
+- Cross-sector controls (Chola, Bajaj) breach warning threshold on 85% of days — threshold
+  needs recalibration for dense graph (v2), but relative differentiation is correct
+
+**Known limitations → v2:**
+1. Dense graph (44 × 43 peers) amplifies contagion scores beyond per-article thresholds
+2. Warning threshold (2.0) needs normalization by peer count or percentile-based approach
+3. Label proxies (13,990) overstate accuracy vs model predictions (3,303 holdout)
+4. v2 priorities: score normalization, threshold sweep, funding profile edges, asymmetric weights
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/signals/entity_graph.py` | Entity graph: 44 nodes, 946 edges, subsector-based weights |
+| `src/signals/propagation.py` | Direct scoring + contagion propagation + rolling windows |
+| `src/signals/contagion_backtest.py` | Crisis replay engine + report generation |
+| `configs/contagion_config.yaml` | Weights, windows, thresholds, 2 crisis definitions |
+| `tests/test_entity_graph.py` | 23 tests |
+| `tests/test_propagation.py` | 20 tests |
+| `tests/test_contagion_backtest.py` | 13 tests |
+| `reports/phase3_contagion_results.md` | Full backtest report |
+| `CONTAGION_PLAN.md` | Durable plan reference |
+| **Total: 141 tests pass** (85 existing + 56 new) | |
 
 ---
 

@@ -1,0 +1,102 @@
+# WHY THIS: Central config for the contagion layer. All weights, windows, and
+# thresholds live here — not hardcoded in Python. This lets you tune the system
+# without touching code, and documents every parameter with its rationale.
+
+# --- Edge Weights ---
+# v1: subsector-only. Same subsector = strong link, cross = weak link.
+# v2 will add funding_profile similarity as a second component.
+edge_weights:
+  intra_subsector: 0.8    # Same subsector (e.g., DHFL → Indiabulls, both housing_finance)
+  cross_subsector: 0.1    # Different subsector (e.g., DHFL → Bajaj Finance)
+
+# --- Signal Scoring ---
+# How much weight each signal attribute contributes to the daily score.
+confidence_weights:
+  High: 1.0
+  Medium: 0.6
+  Low: 0.3
+
+direction_multiplier:
+  Deterioration: 1.0      # Full weight for negative signals
+  Improvement: -0.5       # Improvement partially offsets (not fully — asymmetric risk)
+  Neutral: 0.0            # No contribution
+
+sector_wide_multiplier: 1.5   # 50% boost for sector-wide signals (affects all peers)
+contagion_window_days: 30     # Look back 30 days of peer signals for contagion
+peer_signal_discount: 0.5     # Non-sector-wide signals are discounted when propagating
+
+# --- Rolling Windows ---
+rolling_windows: [7, 30, 90]
+
+# --- Score Thresholds ---
+# When rolling score crosses these, it's a warning or critical alert.
+score_thresholds:
+  warning: 2.0
+  critical: 5.0
+
+# --- Parameter Sweep ---
+# Grid search over these values during backtest to find optimal thresholds.
+sweep:
+  intra_subsector: [0.5, 0.6, 0.7, 0.8, 0.9]
+  cross_subsector: [0.0, 0.05, 0.1, 0.2]
+  contagion_window_days: [14, 30, 60]
+
+# --- Crisis Definitions ---
+# Each crisis has source entities (where signals originate) and target entities
+# (where we expect contagion to propagate). first_action is the date of the
+# first downgrade/default for the target entity — our ground truth.
+crises:
+  ilfs_dhfl_2018:
+    name: "IL&FS / DHFL Housing Finance Crisis"
+    start_date: "2018-06-01"
+    end_date: "2020-06-30"
+    source_entities: ["IL&FS", "DHFL"]
+    target_entities:
+      # --- Housing finance peers (should get early contagion warnings) ---
+      - name: "Indiabulls Housing Finance"
+        first_action: "2019-08-30"
+      - name: "PNB Housing Finance"
+        first_action: "2020-02-21"
+      - name: "Can Fin Homes"
+        first_action: "2019-05-06"
+      - name: "Piramal Enterprises"
+        first_action: "2019-05-07"
+      - name: "Reliance Home Finance"
+        first_action: "2019-04-03"
+      # --- Cross-subsector controls (diversified_nbfc, edge weight=0.1) ---
+      # These should get MINIMAL contagion from housing finance crisis.
+      # This is the real FP control test: does cross-subsector weight contain spillover?
+      - name: "Cholamandalam Investment"
+        first_action: null    # Cross-subsector control: 0 downgrades, diversified_nbfc
+      - name: "Bajaj Finance"
+        first_action: null    # Cross-subsector control: stable diversified_nbfc
+
+  srei_infra_2019:
+    # Renamed from 'srei_relcap_2020': Reliance Capital defaulted by Nov 2019 and has
+    # 0 articles in 2020+. Starting at 2019-06-01 captures RelCap's final crisis months
+    # as a source, giving a more realistic picture of infrastructure stress propagation.
+    name: "SREI / Reliance Capital Infrastructure Crisis"
+    start_date: "2019-06-01"
+    end_date: "2022-01-31"
+    source_entities: ["Reliance Capital", "SREI Infrastructure Finance"]
+    target_entities:
+      - name: "SREI Equipment Finance"
+        first_action: "2020-06-03"
+      # --- Intra-subsector stable entity (same subsector, survived the crisis) ---
+      # L&T Finance is infrastructure_finance (weight=0.8). High contagion is EXPECTED
+      # here — it tests whether the system correctly flags the whole subsector.
+      - name: "L&T Finance"
+        first_action: null    # Intra-subsector stable: survived, never downgraded
+      # --- Cross-subsector control (different subsector, weight=0.1) ---
+      - name: "Bajaj Finance"
+        first_action: null    # Cross-subsector control: diversified_nbfc
+
+# --- File Paths ---
+paths:
+  entity_graph: "configs/nbfc_entities.yaml"
+  holdout_predictions: "data/processed/finetuned_holdout_outputs.jsonl"
+  holdout_source: "data/processed/entity_holdout.jsonl"
+  labels: "data/processed/labels_final.jsonl"
+  articles: "data/processed/gdelt_for_labeling.csv"
+  rating_actions: "data/raw/rating_actions_sourced.csv"
+  report_output: "reports/phase3_contagion_results.md"
