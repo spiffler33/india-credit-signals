@@ -542,54 +542,56 @@ captures this cascade effect automatically.
 ### 3.2 Signal Propagation ✅ DONE
 - Direct scoring: `direction_multiplier × confidence_weight × sector_wide_bonus`
 - Contagion: `edge_weight(P,E) × rolling_direct(P, D, window) × peer_discount`
+- v2: contagion normalized by n_contributing_peers (`normalize_by_peers: true`)
 - Additive (not multiplicative) — entities with zero direct signals still get contagion
-- `src/signals/propagation.py` + `tests/test_propagation.py` (20 tests)
+- `src/signals/propagation.py` + `tests/test_propagation.py` (24 tests)
 
-### 3.3 Contagion Backtest ✅ DONE
-Two crisis replays validated:
+### 3.3 Contagion Backtest ✅ DONE (v2 normalized)
+Two crisis replays validated. Results below are v2 (normalized, threshold=4.0).
 
 **IL&FS/DHFL 2018-19 (housing finance):**
 
 | Target Entity | First Action | Lead Time | Improvement | Notes |
 |---------------|-------------|-----------|-------------|-------|
-| PNB Housing | 2020-02-21 | 587d | **+149d** | Contagion added 5 months |
-| Indiabulls HF | 2019-08-30 | 412d | **+69d** | Direct + contagion |
-| Piramal | 2019-05-07 | 334d | **+334d** | Zero direct — contagion only |
-| Can Fin Homes | 2019-05-06 | 296d | **+296d** | Zero direct — contagion only |
-| Reliance Home Finance | 2019-04-03 | 280d | **+83d** | Direct + contagion |
+| PNB Housing | 2020-02-21 | 511d | **+483d** | Contagion is what pushes past threshold |
+| Indiabulls HF | 2019-08-30 | 343d | **+7d** | Direct + contagion |
+| Can Fin Homes | 2019-05-06 | 220d | **+220d** | Zero direct — contagion only |
+| Piramal | 2019-05-07 | 210d | **+210d** | Zero direct — contagion only |
+| Reliance Home Finance | 2019-04-03 | 206d | **+12d** | Direct + contagion |
 
 **SREI/RelCap 2019-22 (infrastructure):**
 
 | Target Entity | First Action | Lead Time | Improvement |
 |---------------|-------------|-----------|-------------|
-| SREI Equipment | 2020-06-03 | 364d | **+71d** |
+| SREI Equipment | 2020-06-03 | 356d | **+112d** |
 
-**Key results:**
-- Intra-subsector entities get 2.3-3.5× more contagion than cross-subsector (edge weight works)
+**Key results (v2):**
+- Intra-subsector entities get 3.7× more contagion than cross-subsector (improved from 3.5×)
 - Can Fin Homes and Piramal had ZERO direct signals — contagion was their ONLY early warning
-- Cross-sector controls (Chola, Bajaj) breach warning threshold on 85% of days — threshold
-  needs recalibration for dense graph (v2), but relative differentiation is correct
+- Cross-sector controls (Chola 6.3%, Bajaj 8.0%) now breach warning threshold <10% of days
+  (was 85% in v1 — fixed by peer-count normalization + threshold recalibration)
 
-**Known limitations → v2:**
-1. Dense graph (44 × 43 peers) amplifies contagion scores beyond per-article thresholds
-2. Warning threshold (2.0) needs normalization by peer count or percentile-based approach
-3. Label proxies (13,990) overstate accuracy vs model predictions (3,303 holdout)
-4. v2 priorities: score normalization, threshold sweep, funding profile edges, asymmetric weights
+**Post-demo improvements (see CONTAGION_PLAN.md):**
+1. ~~Score normalization~~ ✅ DONE
+2. ~~Threshold recalibration~~ ✅ DONE
+3. Funding profile edges — wholesale/retail similarity (highest remaining priority)
+4. Asymmetric weights — large entity stress hits small entities harder
+5. Exponential decay, full-corpus inference (lower priority)
 
 ### Files
 
 | File | Purpose |
 |------|---------|
 | `src/signals/entity_graph.py` | Entity graph: 44 nodes, 946 edges, subsector-based weights |
-| `src/signals/propagation.py` | Direct scoring + contagion propagation + rolling windows |
+| `src/signals/propagation.py` | Direct scoring + contagion propagation (v2: peer-count normalization) |
 | `src/signals/contagion_backtest.py` | Crisis replay engine + report generation |
 | `configs/contagion_config.yaml` | Weights, windows, thresholds, 2 crisis definitions |
 | `tests/test_entity_graph.py` | 23 tests |
-| `tests/test_propagation.py` | 20 tests |
+| `tests/test_propagation.py` | 24 tests (20 original + 4 normalization) |
 | `tests/test_contagion_backtest.py` | 13 tests |
-| `reports/phase3_contagion_results.md` | Full backtest report |
+| `reports/phase3_contagion_results.md` | Full backtest report (v2) |
 | `CONTAGION_PLAN.md` | Durable plan reference |
-| **Total: 141 tests pass** (85 existing + 56 new) | |
+| **Total: 145 tests pass** (141 existing + 4 new) | |
 
 ---
 

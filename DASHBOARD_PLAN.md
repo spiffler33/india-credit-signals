@@ -212,8 +212,8 @@ Based on backtesting, 79% of these warnings preceded actual downgrades."
 
 | Step | What | Files | Commit |
 |------|------|-------|--------|
-| 1 | Contagion v2: normalize + threshold recal | `propagation.py`, config, tests | `[Phase 3] Fix contagion scoring: normalize by peer count` |
-| 2 | Re-run backtest with v2 | Report update | `[Phase 3] v2 backtest: cross-sector FP contained` |
+| ~~1~~ | ~~Contagion v2: normalize + threshold recal~~ | ~~`propagation.py`, config, tests~~ | ✅ `a15f2a5` |
+| ~~2~~ | ~~Re-run backtest with v2~~ | ~~Report update~~ | ✅ (included in Step 1 commit) |
 | 3 | Data export pipeline | `export_dashboard_data.py` + tests | `[Phase 4] Add dashboard data export pipeline` |
 | 4 | Dashboard skeleton + data loader | `app.py`, `data_loader.py`, `styling.py` | `[Phase 4] Add Streamlit dashboard skeleton` |
 | 5 | Entity Timeline view | `entity_timeline.py`, `charts.py` | `[Phase 4] Add entity timeline view` |

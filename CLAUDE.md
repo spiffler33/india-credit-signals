@@ -78,20 +78,21 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ## Current Phase
 Phase 4 — Dashboard & Demo. Phases 0–3 COMPLETE.
 
-**WHERE WE ARE NOW:** Phase 3 contagion layer COMPLETE. The system propagates credit
-distress from one entity to its sector peers. When DHFL collapsed, contagion provided
-the ONLY early warning for Can Fin Homes (+296d) and Piramal (+334d) — both had zero
-direct signals. Intra-subsector entities get 2.3-3.5× more contagion than cross-sector.
-141 tests pass (85 existing + 56 new).
+**WHERE WE ARE NOW:** Phase 3 contagion layer COMPLETE including v2 normalization fix.
+Contagion scores now normalized by contributing peer count. Cross-sector false positive
+breach rate dropped from 85% to 6-8%. Can Fin Homes (+220d) and Piramal (+210d) still
+get contagion-only warnings. 145 tests pass (141 existing + 4 normalization).
 
 **Project direction:** This is being built as a **real work tool** — not just a contest entry.
 Goal: demonstrate to global head that LLM-based credit signal extraction + sector contagion
 is the direction of travel for risk alerting systems. Data science team may extend to other
-sectors. Priority order: ~~(1) contagion layer~~, (1) dashboard/demo, (2) inference pipeline,
-(3) contagion v2 improvements (score normalization, threshold recalibration).
+sectors. Priority order: ~~(1) contagion layer~~, ~~(2) contagion v2 fix~~,
+(1) dashboard/demo, (2) inference pipeline.
+Post-demo: funding profile edges + asymmetric weights (see CONTAGION_PLAN.md v2 items 3-4).
 
-**Immediate next action:** Phase 4 — Streamlit dashboard. Key views: entity timeline
-(signals vs rating actions), sector heatmap, contagion network graph, alert feed.
+**Immediate next action:** Phase 4 — Streamlit dashboard. Start with data export pipeline
+(`src/signals/export_dashboard_data.py`), then 5 views: entity timeline, sector heatmap,
+contagion network graph, signal feed, alert dashboard. See `DASHBOARD_PLAN.md`.
 Build on Phase 2.4 backtest data + Phase 3 contagion scores.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
