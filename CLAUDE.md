@@ -78,10 +78,10 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ## Current Phase
 Phase 4 — Dashboard & Demo. Phases 0–3 COMPLETE.
 
-**WHERE WE ARE NOW:** Phase 3 contagion layer COMPLETE including v2 normalization fix.
-Contagion scores now normalized by contributing peer count. Cross-sector false positive
-breach rate dropped from 85% to 6-8%. Can Fin Homes (+220d) and Piramal (+210d) still
-get contagion-only warnings. 145 tests pass (141 existing + 4 normalization).
+**WHERE WE ARE NOW:** Phase 4 Step 3 (data export pipeline) COMPLETE.
+`src/signals/export_dashboard_data.py` runs the full scoring pipeline and saves 6 files
+to `data/dashboard/` (parquet + JSON). 164 tests pass (145 existing + 19 new).
+Dashboard data: 82,781 entity-day scores, 17,293 signals, 946 edges, 1,654 rating actions.
 
 **Project direction:** This is being built as a **real work tool** — not just a contest entry.
 Goal: demonstrate to global head that LLM-based credit signal extraction + sector contagion
@@ -90,10 +90,10 @@ sectors. Priority order: ~~(1) contagion layer~~, ~~(2) contagion v2 fix~~,
 (1) dashboard/demo, (2) inference pipeline.
 Post-demo: funding profile edges + asymmetric weights (see CONTAGION_PLAN.md v2 items 3-4).
 
-**Immediate next action:** Phase 4 — Streamlit dashboard. Start with data export pipeline
-(`src/signals/export_dashboard_data.py`), then 5 views: entity timeline, sector heatmap,
-contagion network graph, signal feed, alert dashboard. See `DASHBOARD_PLAN.md`.
-Build on Phase 2.4 backtest data + Phase 3 contagion scores.
+**Immediate next action:** Phase 4 Step 4 — Streamlit dashboard skeleton.
+Build `src/dashboard/app.py` (main app + sidebar nav), `utils/data_loader.py` (parquet loading
+with `@st.cache_data`), `utils/styling.py` (color scales, theme). Then Step 5: Entity Timeline
+view (the money shot for the demo). See `DASHBOARD_PLAN.md`.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -181,6 +181,16 @@ python -m src.data.format_training               # produces train/val/test/entit
 - `tests/test_propagation.py` — 20 tests
 - `tests/test_contagion_backtest.py` — 13 tests
 - `CONTAGION_PLAN.md` — durable plan reference with lessons learned
+
+**Key Phase 4 files (so far):**
+- `src/signals/export_dashboard_data.py` — runs scoring pipeline, saves 6 files to `data/dashboard/`
+- `tests/test_export_dashboard_data.py` — 19 tests for export functions
+- `data/dashboard/entity_scores.parquet` — 82,781 entity-day scores (gitignored, regenerated)
+- `data/dashboard/signals.parquet` — 17,293 article-level signals
+- `data/dashboard/contagion_edges.parquet` — 946 graph edges
+- `data/dashboard/rating_actions.parquet` — 1,654 rating actions with outcome coloring
+- `data/dashboard/entity_metadata.json` — 44 entities with subsector/peer info
+- `data/dashboard/crisis_results.json` — 2 crisis replays with lead times
 
 **Phase 3 headline results:**
 - IL&FS/DHFL crisis: 5/5 housing finance targets get contagion lead times (280-587d)

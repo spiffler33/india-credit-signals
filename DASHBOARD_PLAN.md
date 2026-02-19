@@ -214,7 +214,7 @@ Based on backtesting, 79% of these warnings preceded actual downgrades."
 |------|------|-------|--------|
 | ~~1~~ | ~~Contagion v2: normalize + threshold recal~~ | ~~`propagation.py`, config, tests~~ | ✅ `a15f2a5` |
 | ~~2~~ | ~~Re-run backtest with v2~~ | ~~Report update~~ | ✅ (included in Step 1 commit) |
-| 3 | Data export pipeline | `export_dashboard_data.py` + tests | `[Phase 4] Add dashboard data export pipeline` |
+| ~~3~~ | ~~Data export pipeline~~ | ~~`export_dashboard_data.py` + tests~~ | ✅ `[Phase 4] Add dashboard data export pipeline` |
 | 4 | Dashboard skeleton + data loader | `app.py`, `data_loader.py`, `styling.py` | `[Phase 4] Add Streamlit dashboard skeleton` |
 | 5 | Entity Timeline view | `entity_timeline.py`, `charts.py` | `[Phase 4] Add entity timeline view` |
 | 6 | Sector Heatmap view | `sector_heatmap.py` | `[Phase 4] Add sector heatmap view` |
