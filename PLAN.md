@@ -472,33 +472,70 @@ to measure lead time and real-world false positive rates.
 - `data/processed/finetuned_test_outputs.jsonl` — test set predictions
 - `data/processed/finetuned_holdout_outputs.jsonl` — entity holdout predictions
 
-### 2.3 RLMF Adaptation (Advanced — Week 3)
-Instead of market feedback (price movements), use **rating feedback**:
-- Reward = model's signal prediction vs actual rating action 6 months later
-- Positive reward: model flagged deterioration AND entity was downgraded
-- Negative reward: model flagged deterioration BUT entity maintained/upgraded
-- This is the novel contribution — RLMF with credit outcomes instead of trading returns
+### 2.3 RLMF Adaptation (DEFERRED)
+Deferred — SFT model is strong enough. RLMF is optional polish for a future iteration.
 
-### 2.4 Evaluation Metrics
-- **Precision/Recall on credit events:** Can it correctly flag entities that will be downgraded?
-- **Lead time:** How many days/weeks before the rating action did the model flag it?
-- **False positive rate:** How many entities flagged but NOT downgraded?
-- **Baseline comparison:** Prompted Opus on same test set (is fine-tuning actually better?)
-- **FinRLlama baseline:** Run FinRLlama 3.2-3B (Meta access approved 2026-02-13) on test set.
-  This is a finance-tuned LLaMA — strong at general financial sentiment but not credit-specific.
-  Comparison table for contest: Base Qwen (0% parse) vs FinRLlama vs Our LoRA.
-  Shows that generic financial fine-tuning ≠ credit signal extraction — our contribution.
+### 2.4 Backtest Against Rating Actions ✅ COMPLETE
+**Full plan:** `BACKTEST_PLAN.md`
+**Report:** `reports/phase2_4_backtest_results.md`
+
+Backtested the LoRA model's predictions against actual CRISIL/ICRA/CARE rating actions.
+This answers the hardest question: does the model predict real downgrades, and how early?
+
+**Headline results:**
+
+| Entity | Rating Actions | Signal Coverage | Mean Lead Time | First Signal |
+|--------|---------------|----------------|----------------|-------------|
+| DHFL | 23 (11 downgrades, 6 defaults) | **23/23 (100%)** | **160 days** | Nov 4, 2018 |
+| Reliance Capital | 15 (8 downgrades, 3 defaults) | **15/15 (100%)** | **156 days** | Nov 20, 2018 |
+| Cholamandalam | 0 (clean record) | — | — | 13% false positive rate |
+
+**Best alert threshold:** N≥5 signals in 14-day window, 90-day lookahead
+→ Precision: 79%, Recall: 73%, F1: 0.760
+
+**Key insight:** The model flagged every DHFL and RelCap downgrade 3-6 months early.
+But the always-deterioration baseline gets similar lead times because crisis entities
+have ~80-93% negative articles. The model's real value is:
+1. **Precision on stable entities** — 13% Chola FP vs 100% for always-det
+2. **Alert-level precision** — 79% at N≥5 threshold
+3. **Structured metadata** — signal type, confidence for actionable triage
+
+**Test set:** 500 predictions from quiet period (2023-07 to 2024-12). Only 5 matching
+rating actions. Not statistically meaningful — confirms holdout is the real backtest story.
+
+**Files:**
+
+| File | Purpose |
+|------|---------|
+| `src/training/backtest.py` | All analysis: lead time, alerts, baselines, report generation |
+| `configs/backtest_config.yaml` | Thresholds, windows, entity aliases |
+| `tests/test_backtest.py` | 30 unit tests (extractors, lead time, alerts, edges) |
+| `reports/phase2_4_backtest_results.md` | Full backtest report |
+| `BACKTEST_PLAN.md` | Durable plan reference |
+
+### 2.4b Baseline Comparisons (DEFERRED)
+Deferred — not needed for building the system. Useful later for contest paper or
+build-vs-buy decision (prompted Opus vs LoRA vs FinRLlama).
 
 ---
 
-## Phase 3: Contagion Layer (Days 15-20)
-**Goal:** When RBI issues a regulatory change, propagate signals across all exposed NBFCs.
+## Phase 3: Contagion Layer ← NEXT
+**Goal:** When one NBFC shows distress signals, propagate warnings to similar entities.
+This is what makes the system a *sector-level* early warning tool, not just a single-entity
+classifier. The pitch to the global head: "The system didn't just catch DHFL. It would have
+flagged the entire housing finance sector 3 months before the cascade."
+
+**Why this matters for work:** You don't monitor one NBFC — you monitor a sector/portfolio.
+The IL&FS/DHFL crisis didn't stay contained. It spread through housing finance (PNB Housing,
+Indiabulls, Piramal), then infrastructure (SREI), then broader NBFCs. A contagion layer
+captures this cascade effect automatically.
 
 ### 3.1 Entity Graph
 Build a simple graph of Indian NBFCs:
 - Nodes: Each NBFC (name, type, size, primary asset class)
 - Edges: Shared characteristics (funding profile, asset class exposure, geography)
 - Weight: Similarity score (two housing finance NBFCs are more connected than a housing NBFC and a gold loan NBFC)
+- Data source: Manual curation from RBI/SEBI data + our 39-entity dataset
 
 ### 3.2 Contagion Rules
 ```python
@@ -515,58 +552,59 @@ for entity in affected_entities(regulation):
 ### 3.3 Rolling Scores
 - Per-entity: 7-day, 30-day, 90-day rolling average of signal scores
 - Per-subsector: Housing finance, infrastructure, microfinance, vehicle finance
-- Threshold alerts: When rolling score crosses -0.5 (warning) or -0.8 (critical)
+- Threshold alerts: When rolling score crosses warning/critical thresholds
+
+### 3.4 Backtest Validation
+- Replay 2018-2019 crisis: does contagion correctly flag housing finance sector
+  after DHFL signals appear?
+- Do SREI/Piramal get elevated scores before their own downgrades?
 
 ---
 
-## Phase 4: Dashboard & Interface (Days 15-20, parallel with Phase 3)
-**Goal:** Visual interface to see signals, entities, scores in real-time.
+## Phase 4: Dashboard & Demo
+**Goal:** Visual demo for global head + usable internal tool.
+Built AFTER contagion layer so the dashboard can show sector-level views.
 
 ### 4.1 Tech Stack
-- **Frontend:** React + Tailwind + Recharts (or Plotly)
-- **Backend:** FastAPI (you already know this)
-- **Database:** Supabase (you already know this) or SQLite for simplicity
-- **Deployment:** Vercel (frontend) + Railway/Fly.io (backend)
+📐 **Streamlit for V1** (not React). Python-only, fast to build, DS team already knows it.
+Move to React only if the global head says "build this for the desk" and it needs to scale.
+- **Frontend:** Streamlit + Plotly
+- **Data:** SQLite or flat files (no backend needed for V1)
+- **Deployment:** Internal server or Streamlit Cloud
 
 ### 4.2 Key Views
-1. **Entity Dashboard:** List of NBFCs with current rolling credit scores, sparklines, last 5 signals
-2. **Signal Feed:** Real-time feed of articles with credit relevance scores and signal types
-3. **Contagion Map:** Network graph showing how signals propagate (use D3 or vis.js)
-4. **Backtest View:** Timeline showing model predictions vs actual rating actions
-5. **Model Comparison:** Side-by-side: fine-tuned model vs prompted Opus vs generic sentiment
+1. **Entity Timeline** (the money shot): X=time, Y=cumulative deterioration signals,
+   vertical red lines = actual rating actions. Shows signals preceding downgrades.
+2. **Sector Heatmap:** All NBFCs colored by rolling credit score. Green → Red.
+3. **Contagion Map:** Network graph showing signal propagation across subsectors.
+4. **Signal Feed:** Recent articles with credit relevance, direction, signal type.
+5. **Alert Dashboard:** Active alerts with precision context from backtest thresholds.
 
-### 4.3 Backtest Visualization
-This is the money shot for any demo/hackathon:
-- X-axis: time
-- Y-axis: model's rolling credit score for entity
-- Vertical lines: actual rating actions
-- Show that the score drops BEFORE the vertical line = early warning works
+### 4.3 Demo Script for Global Head
+- Open DHFL timeline: "The model flagged DHFL 91 days before the first downgrade."
+- Show Cholamandalam: "On a stable NBFC, only 13% false alarm rate."
+- Show contagion: "When DHFL signals appeared, the system automatically flagged
+  PNB Housing, Indiabulls, Piramal — the whole housing finance sector."
+- "Your DS team can replicate this for [other sector] with the same pipeline."
 
 ---
 
-## Phase 5: Contest Preparation (Days 21-30)
-**Goal:** Package for FinRL/FinAI 2026 or SecureFinAI 2026 submission.
+## Phase 5: Production & Extension (Future)
+**Goal:** Make the system operational and extensible to other sectors.
 
-### 5.1 Watch These Repos
-```
-https://github.com/Open-Finance-Lab/FinRL_Contest_2025
-https://github.com/Open-Finance-Lab/FinAI_Contest_2025
-https://github.com/Open-Finance-Lab/SecureFinAI_Contest_2025
-```
-SecureFinAI 2026 repo exists but dates not announced. Check weekly.
+### 5.1 Inference Pipeline
+- Ingest new articles daily (GDELT, firm news feeds, or Reuters/Bloomberg)
+- Run model inference (GPU cluster or Colab batch)
+- Update dashboard, send alerts on threshold breaches
 
-### 5.2 Submission Requirements (based on past contests)
-- Open-source code on GitHub
-- Trained model weights on HuggingFace
-- Technical report (4-6 pages, IEEE format)
-- Reproducible results with clear instructions
+### 5.2 Sector Extension
+- Architecture is sector-agnostic: news → LLM → structured signals → contagion → dashboard
+- DS team swaps in new entity graph + training data for other sectors
+- Document the pipeline for replicability
 
-### 5.3 What Makes This Win
-Past winners won because of novel data pipelines, not model architecture. Your edge:
-- **Credit-specific signals** (not generic sentiment) — nobody else is doing this
-- **Regulator-to-sector contagion** — novel contribution to the field
-- **EM focus with English-language data** — accessible and reproducible
-- **Backtested against real rating actions** — concrete, verifiable results
+### 5.3 Contest Submission (Optional)
+If timing works, package for FinRL/FinAI 2026 or SecureFinAI 2026.
+The work tool is the priority; the contest is a bonus.
 
 ---
 

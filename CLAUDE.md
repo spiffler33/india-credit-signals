@@ -76,20 +76,22 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ```
 
 ## Current Phase
-Phase 2 — Model Training. Phase 2.2 LoRA training COMPLETE. Proceeding to evaluation/backtest.
+Phase 3 — Contagion Layer. Phases 0–2 COMPLETE. Building sector-level signal propagation.
 
-**WHERE WE ARE NOW:** Phase 2.2 LoRA training ran on Colab (T4, 145 min). Results:
-- Parse rate: 0% → 100% (format learning solved in <1 epoch)
-- Entity holdout: DHFL 97.7% det. recall (unseen entity), Chola 33% false positive rate
-- Best checkpoint at step 500 of 1,800 (overfitting after ~0.83 epochs)
-- Adapters saved: `drive/MyDrive/india-credit-signals/data/models/qwen-credit-lora/` (152.8 MB)
-- Full results: `reports/phase2_2_training_results.md`
+**WHERE WE ARE NOW:** Phase 2.4 backtest COMPLETE. The fine-tuned model catches every
+DHFL and Reliance Capital downgrade/default with 90-180 day lead time. Cholamandalam
+(stable NBFC, zero downgrades) gets 13% false positive rate. Best alert threshold:
+N≥5 signals in 14-day window → 79% precision, 73% recall, F1=0.760.
 
-**Decision:** SFT model is strong enough. Skip RLMF (Phase 2.3) for now — proceed to backtesting.
+**Project direction:** This is being built as a **real work tool** — not just a contest entry.
+Goal: demonstrate to global head that LLM-based credit signal extraction + sector contagion
+is the direction of travel for risk alerting systems. Data science team may extend to other
+sectors. Priority order: (1) contagion layer, (2) dashboard/demo, (3) inference pipeline.
 
-**Immediate next action:** Phase 2.4 — Backtest against actual rating actions.
-Measure lead time (how many days before a downgrade did the model flag it?) and real-world
-false positive rates. Then run baseline comparisons (prompted Opus, FinRLlama).
+**Immediate next action:** Phase 3 — Contagion Layer. When DHFL collapses, propagate risk
+signals to other housing finance NBFCs (Piramal, PNB Housing, Indiabulls) based on shared
+subsector, funding profile, and asset class exposure. This is what makes it a *sector-level*
+early warning system, not just a single-entity classifier.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -107,13 +109,15 @@ false positive rates. Then run baseline comparisons (prompted Opus, FinRLlama).
 - **Training splits: `data/processed/train.jsonl` (9,591), `val.jsonl` (2,247), `test.jsonl` (2,133)**
 - **Entity holdout: `data/processed/entity_holdout.jsonl` (3,303 — DHFL/Reliance Capital/Cholamandalam)**
 
-**Presentation / Contest Reports:**
-The `reports/` directory collects analysis artifacts for the final FinAI 2026 submission and presentation.
+**Presentation / Reports:**
+The `reports/` directory collects analysis artifacts for demos, presentations, and potential contest submission.
 Add a new report at each major milestone (training eval, backtest results, contagion analysis, etc.).
 Current reports:
 - `reports/phase1_label_quality.md` — label quality spot-check, confusion matrix, miss patterns
 - `reports/phase1_4_training_data_design.md` — training data format design decisions, rationale, dataset stats
 - `reports/phase2_2_training_results.md` — LoRA training results, per-entity holdout, lessons learned
+- `reports/phase2_4_backtest_results.md` — backtest vs actual rating actions, lead times, alert thresholds
+- `reports/phase2_4_backtest_test_results.md` — test set backtest (limited, quiet period)
 
 **Key labeling scripts:**
 ```bash
@@ -152,8 +156,21 @@ python -m src.data.format_training               # produces train/val/test/entit
   - Results: 100% parse rate, 97.7% det. recall on unseen DHFL, best checkpoint at step 500
 - `reports/phase2_2_training_results.md` — full training results report with per-entity analysis
 
-**Phase 2.2 output files (on Google Drive):**
+**Phase 2.2 output files (on Google Drive, also copied to local):**
 - `data/models/qwen-credit-lora/` — LoRA adapters + tokenizer (152.8 MB)
 - `data/processed/finetuned_val_outputs.jsonl` — val set predictions (500 examples)
 - `data/processed/finetuned_test_outputs.jsonl` — test set predictions (500 examples)
 - `data/processed/finetuned_holdout_outputs.jsonl` — entity holdout predictions (3,303 examples)
+
+**Key Phase 2.4 files:**
+- `src/training/backtest.py` — backtest analysis: lead time, alert precision/recall, baselines, report gen
+- `configs/backtest_config.yaml` — thresholds, entity aliases, lookback windows
+- `tests/test_backtest.py` — 30 unit tests (synthetic data + known DHFL dates)
+- `reports/phase2_4_backtest_results.md` — holdout backtest results (DHFL 100% coverage, 160d mean lead)
+- `BACKTEST_PLAN.md` — durable plan reference for Phase 2.4
+
+**Phase 2.4 headline results:**
+- DHFL: 23/23 rating actions had prior signals, mean 160-day lead time, first signal Nov 4 2018
+- Reliance Capital: 15/15 actions, mean 156-day lead time, first signal Nov 20 2018
+- Cholamandalam: 0 downgrades, 13% false positive rate (179/1,372 articles)
+- Best alert: N≥5 in 14-day window → 79% precision, 73% recall, F1=0.760
