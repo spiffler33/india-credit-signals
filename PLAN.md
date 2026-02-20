@@ -595,31 +595,56 @@ Two crisis replays validated. Results below are v2 (normalized, threshold=4.0).
 
 ---
 
-## Phase 4: Dashboard & Demo
+## Phase 4: Dashboard & Demo ✅ COMPLETE
 **Goal:** Visual demo for global head + usable internal tool.
 Built AFTER contagion layer so the dashboard can show sector-level views.
 
-### 4.1 Tech Stack
+### 4.1 Tech Stack ✅ DONE
 📐 **Streamlit for V1** (not React). Python-only, fast to build, DS team already knows it.
 Move to React only if the global head says "build this for the desk" and it needs to scale.
-- **Frontend:** Streamlit + Plotly
-- **Data:** SQLite or flat files (no backend needed for V1)
-- **Deployment:** Internal server or Streamlit Cloud
+- **Frontend:** Streamlit + Plotly (interactive charts with hover/zoom)
+- **Data:** Parquet + JSON files from export pipeline (no database needed)
+- **Theme:** Light mode, white backgrounds, indigo/purple/amber/orange/crimson/teal palette
+- **Run:** `streamlit run src/dashboard/app.py`
 
-### 4.2 Key Views
-1. **Entity Timeline** (the money shot): X=time, Y=cumulative deterioration signals,
-   vertical red lines = actual rating actions. Shows signals preceding downgrades.
-2. **Sector Heatmap:** All NBFCs colored by rolling credit score. Green → Red.
-3. **Contagion Map:** Network graph showing signal propagation across subsectors.
-4. **Signal Feed:** Recent articles with credit relevance, direction, signal type.
-5. **Alert Dashboard:** Active alerts with precision context from backtest thresholds.
+### 4.2 Data Export Pipeline ✅ DONE
+- `src/signals/export_dashboard_data.py` — runs full scoring pipeline → 6 files in `data/dashboard/`
+- `tests/test_export_dashboard_data.py` — 19 tests
+- Output: entity_scores (82,781 rows), signals (17,293), edges (946), ratings (1,654), metadata (44), crisis results (2)
+- Runtime: ~21 min on M1 (contagion propagation bottleneck)
 
-### 4.3 Demo Script for Global Head
-- Open DHFL timeline: "The model flagged DHFL 91 days before the first downgrade."
-- Show Cholamandalam: "On a stable NBFC, only 13% false alarm rate."
-- Show contagion: "When DHFL signals appeared, the system automatically flagged
-  PNB Housing, Indiabulls, Piramal — the whole housing finance sector."
-- "Your DS team can replicate this for [other sector] with the same pipeline."
+### 4.3 Dashboard Views ✅ DONE (5 views, 2,362 lines)
+
+1. **Entity Timeline** (the money shot): Rolling 30d deterioration score vs time, with
+   threshold crossing markers and rating action vertical lines. Toggle direct/contagion/total.
+   DHFL shows 160-day lead time gap. Can Fin Homes shows contagion-only warning.
+2. **Sector Heatmap:** 44 entities grouped by subsector, colored by rolling score (green→red).
+   Animate through 2018 to see housing finance light up while vehicle finance stays green.
+3. **Contagion Network:** Force-directed graph (Plotly). Nodes sized by score, colored by subsector.
+   Edges show contagion flow with thickness proportional to weight × signal strength.
+4. **Signal Feed:** Sortable/filterable table of individual article signals. Filter by entity,
+   direction, date, confidence. Shows title, signal type, reasoning.
+5. **Alert Dashboard:** Active threshold breaches with precision context from backtest.
+   "79% of similar alerts preceded a downgrade within 90 days."
+
+### 4.4 Dashboard Files
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `.streamlit/config.toml` | 12 | Theme: light mode, white backgrounds |
+| `src/dashboard/app.py` | 138 | Main app: sidebar nav + page routing |
+| `src/dashboard/utils/data_loader.py` | 176 | Load parquet/JSON with `@st.cache_data` |
+| `src/dashboard/utils/styling.py` | 150 | Color scales, theme constants, CSS |
+| `src/dashboard/views/entity_timeline.py` | 755 | Rolling score timeline + threshold crossings |
+| `src/dashboard/views/sector_heatmap.py` | 234 | Subsector heatmap by rolling score |
+| `src/dashboard/views/contagion_network.py` | 332 | Network graph of signal propagation |
+| `src/dashboard/views/signal_feed.py` | 246 | Article-level signal table with filters |
+| `src/dashboard/views/alert_dashboard.py` | 319 | Active alerts with precision context |
+
+### 4.5 Demo Script for Global Head
+See `DASHBOARD_PLAN.md` → Demo Script section for the full 6-step walkthrough.
+Key beats: DHFL 160d lead time → Can Fin contagion-only → sector heatmap animation →
+network graph → alert precision → "your DS team can replicate this for any sector."
 
 ---
 

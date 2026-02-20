@@ -110,21 +110,26 @@ Command: `python -m src.signals.export_dashboard_data --config configs/contagion
 - **streamlit-agraph** or **pyvis** — network graph (evaluate which is simpler)
 - **Data:** Parquet files from export pipeline (no database needed)
 
-### File Structure
+### File Structure (as built)
 ```
+.streamlit/
+    config.toml            # Streamlit theme: light mode, white backgrounds
 src/dashboard/
+    __init__.py
     app.py                 # Main Streamlit app (sidebar nav + page routing)
-    pages/
-        entity_timeline.py # View 1: Entity signal timeline vs rating actions
-        sector_heatmap.py  # View 2: All entities colored by rolling score
-        contagion_network.py # View 3: Network graph of signal propagation
-        signal_feed.py     # View 4: Article-level signal table with filters
-        alert_dashboard.py # View 5: Active alerts with precision context
+    views/
+        __init__.py
+        entity_timeline.py # View 1: Rolling score timeline + threshold crossings (755 lines)
+        sector_heatmap.py  # View 2: Subsector heatmap by rolling score (234 lines)
+        contagion_network.py # View 3: Network graph of signal propagation (332 lines)
+        signal_feed.py     # View 4: Article-level signal table with filters (246 lines)
+        alert_dashboard.py # View 5: Active alerts with precision context (319 lines)
     utils/
-        data_loader.py     # Load parquet files, cache with @st.cache_data
-        charts.py          # Reusable Plotly figure builders
-        styling.py         # Color scales, theme constants
+        __init__.py
+        data_loader.py     # Load parquet/JSON, cache with @st.cache_data (176 lines)
+        styling.py         # Color scales, theme constants, CSS (150 lines)
 ```
+Total: 2,362 lines across 9 code files + 3 `__init__.py` + theme config.
 
 ### View 1: Entity Timeline (the money shot)
 
@@ -215,12 +220,12 @@ Based on backtesting, 79% of these warnings preceded actual downgrades."
 | ~~1~~ | ~~Contagion v2: normalize + threshold recal~~ | ~~`propagation.py`, config, tests~~ | ✅ `a15f2a5` |
 | ~~2~~ | ~~Re-run backtest with v2~~ | ~~Report update~~ | ✅ (included in Step 1 commit) |
 | ~~3~~ | ~~Data export pipeline~~ | ~~`export_dashboard_data.py` + tests~~ | ✅ `[Phase 4] Add dashboard data export pipeline` |
-| 4 | Dashboard skeleton + data loader | `app.py`, `data_loader.py`, `styling.py` | `[Phase 4] Add Streamlit dashboard skeleton` |
-| 5 | Entity Timeline view | `entity_timeline.py`, `charts.py` | `[Phase 4] Add entity timeline view` |
-| 6 | Sector Heatmap view | `sector_heatmap.py` | `[Phase 4] Add sector heatmap view` |
-| 7 | Signal Feed view | `signal_feed.py` | `[Phase 4] Add signal feed view` |
-| 8 | Contagion Network view | `contagion_network.py` | `[Phase 4] Add contagion network graph` |
-| 9 | Alert Dashboard view | `alert_dashboard.py` | `[Phase 4] Add alert dashboard view` |
+| ~~4~~ | ~~Dashboard skeleton + data loader~~ | ~~`app.py`, `data_loader.py`, `styling.py`~~ | ✅ `20a6c59` |
+| ~~5~~ | ~~Entity Timeline view (v3: rolling score + threshold crossings)~~ | ~~`entity_timeline.py`~~ | ✅ `20a6c59` |
+| ~~6~~ | ~~Sector Heatmap view~~ | ~~`sector_heatmap.py`~~ | ✅ `20a6c59` |
+| ~~7~~ | ~~Signal Feed view~~ | ~~`signal_feed.py`~~ | ✅ `20a6c59` |
+| ~~8~~ | ~~Contagion Network view~~ | ~~`contagion_network.py`~~ | ✅ `20a6c59` |
+| ~~9~~ | ~~Alert Dashboard view~~ | ~~`alert_dashboard.py`~~ | ✅ `20a6c59` |
 | 10 | Polish + demo script | README updates, demo walkthrough | `[Phase 4] Dashboard complete: 5 views for demo` |
 
 ---

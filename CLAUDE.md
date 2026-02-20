@@ -78,22 +78,21 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ## Current Phase
 Phase 4 — Dashboard & Demo. Phases 0–3 COMPLETE.
 
-**WHERE WE ARE NOW:** Phase 4 Step 3 (data export pipeline) COMPLETE.
-`src/signals/export_dashboard_data.py` runs the full scoring pipeline and saves 6 files
-to `data/dashboard/` (parquet + JSON). 164 tests pass (145 existing + 19 new).
-Dashboard data: 82,781 entity-day scores, 17,293 signals, 946 edges, 1,654 rating actions.
+**WHERE WE ARE NOW:** Phase 4 COMPLETE — Streamlit dashboard with 5 views.
+`streamlit run src/dashboard/app.py` launches the full dashboard. Data from 6 pre-computed
+files in `data/dashboard/` (regenerate with `python -m src.signals.export_dashboard_data`).
+Views: Entity Timeline (v3), Sector Heatmap, Contagion Network, Signal Feed, Alert Dashboard.
+2,362 lines across 9 files. 164 tests pass.
 
 **Project direction:** This is being built as a **real work tool** — not just a contest entry.
 Goal: demonstrate to global head that LLM-based credit signal extraction + sector contagion
 is the direction of travel for risk alerting systems. Data science team may extend to other
 sectors. Priority order: ~~(1) contagion layer~~, ~~(2) contagion v2 fix~~,
-(1) dashboard/demo, (2) inference pipeline.
+~~(3) dashboard/demo~~. Remaining: (1) KOP documentation, (2) inference pipeline.
 Post-demo: funding profile edges + asymmetric weights (see CONTAGION_PLAN.md v2 items 3-4).
 
-**Immediate next action:** Phase 4 Step 4 — Streamlit dashboard skeleton.
-Build `src/dashboard/app.py` (main app + sidebar nav), `utils/data_loader.py` (parquet loading
-with `@st.cache_data`), `utils/styling.py` (color scales, theme). Then Step 5: Entity Timeline
-view (the money shot for the demo). See `DASHBOARD_PLAN.md`.
+**Immediate next action:** Discuss priorities with user — KOP documentation (`docs/`),
+inference pipeline (Phase 5.1), or contagion improvements (funding edges + asymmetric weights).
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.
@@ -182,7 +181,7 @@ python -m src.data.format_training               # produces train/val/test/entit
 - `tests/test_contagion_backtest.py` — 13 tests
 - `CONTAGION_PLAN.md` — durable plan reference with lessons learned
 
-**Key Phase 4 files (so far):**
+**Key Phase 4 files:**
 - `src/signals/export_dashboard_data.py` — runs scoring pipeline, saves 6 files to `data/dashboard/`
 - `tests/test_export_dashboard_data.py` — 19 tests for export functions
 - `data/dashboard/entity_scores.parquet` — 82,781 entity-day scores (gitignored, regenerated)
@@ -191,6 +190,15 @@ python -m src.data.format_training               # produces train/val/test/entit
 - `data/dashboard/rating_actions.parquet` — 1,654 rating actions with outcome coloring
 - `data/dashboard/entity_metadata.json` — 44 entities with subsector/peer info
 - `data/dashboard/crisis_results.json` — 2 crisis replays with lead times
+- `.streamlit/config.toml` — Streamlit theme (light mode, white backgrounds)
+- `src/dashboard/app.py` — main app: sidebar nav + page routing (138 lines)
+- `src/dashboard/utils/data_loader.py` — load parquet/JSON with `@st.cache_data` (176 lines)
+- `src/dashboard/utils/styling.py` — color scales, theme constants, CSS (150 lines)
+- `src/dashboard/views/entity_timeline.py` — rolling score timeline + threshold crossings (755 lines)
+- `src/dashboard/views/sector_heatmap.py` — subsector heatmap by rolling score (234 lines)
+- `src/dashboard/views/contagion_network.py` — network graph of signal propagation (332 lines)
+- `src/dashboard/views/signal_feed.py` — article-level signal table with filters (246 lines)
+- `src/dashboard/views/alert_dashboard.py` — active alerts with precision context (319 lines)
 
 **Phase 3 headline results:**
 - IL&FS/DHFL crisis: 5/5 housing finance targets get contagion lead times (280-587d)
