@@ -1,0 +1,12 @@
+# WHY THIS: Force light theme for all charts and UI elements.
+# Without this, Streamlit defaults to the user's system theme (often dark),
+# which makes chart backgrounds dark and clashes with our color palette
+# designed for white backgrounds.
+
+[theme]
+base = "light"
+primaryColor = "#4A6FA5"          # Indigo blue — matches our score area color
+backgroundColor = "#FFFFFF"        # White page background
+secondaryBackgroundColor = "#F8F9FA"  # Very light gray for sidebar/cards
+textColor = "#1A1A2E"             # Near-black text — high contrast on white
+font = "sans serif"
