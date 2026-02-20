@@ -1,0 +1,410 @@
+{
+  "entities": [
+    {
+      "name": "Aavas Financiers",
+      "full_name": "Aavas Financiers Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Aditya Birla Finance",
+      "full_name": "Aditya Birla Finance Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "Altico Capital",
+      "full_name": "Altico Capital India Private Limited",
+      "subsector": "microfinance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 5,
+      "n_cross_peers": 38
+    },
+    {
+      "name": "Aptus Value Housing",
+      "full_name": "Aptus Value Housing Finance India Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Arohan Financial",
+      "full_name": "Arohan Financial Services Limited",
+      "subsector": "microfinance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 5,
+      "n_cross_peers": 38
+    },
+    {
+      "name": "Asirvad Micro Finance",
+      "full_name": "Asirvad Micro Finance Limited",
+      "subsector": "microfinance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 5,
+      "n_cross_peers": 38
+    },
+    {
+      "name": "Bajaj Finance",
+      "full_name": "Bajaj Finance Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "Can Fin Homes",
+      "full_name": "Can Fin Homes Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Cholamandalam Investment",
+      "full_name": "Cholamandalam Investment and Finance Company Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "CreditAccess Grameen",
+      "full_name": "CreditAccess Grameen Limited",
+      "subsector": "microfinance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 5,
+      "n_cross_peers": 38
+    },
+    {
+      "name": "DHFL",
+      "full_name": "Dewan Housing Finance Corporation Limited",
+      "subsector": "housing_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Fusion Micro Finance",
+      "full_name": "Fusion Micro Finance Limited",
+      "subsector": "microfinance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 5,
+      "n_cross_peers": 38
+    },
+    {
+      "name": "HDB Financial Services",
+      "full_name": "HDB Financial Services Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "HDFC Ltd",
+      "full_name": "Housing Development Finance Corporation Limited",
+      "subsector": "housing_finance",
+      "status": "merged",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Hero FinCorp",
+      "full_name": "Hero FinCorp Limited",
+      "subsector": "vehicle_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 2,
+      "n_cross_peers": 41
+    },
+    {
+      "name": "Home First Finance",
+      "full_name": "Home First Finance Company India Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "IIFL Finance",
+      "full_name": "IIFL Finance Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "IL&FS",
+      "full_name": "Infrastructure Leasing & Financial Services Limited",
+      "subsector": "infrastructure_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "IL&FS Financial Services",
+      "full_name": "IL&FS Financial Services Limited",
+      "subsector": "infrastructure_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "IREDA",
+      "full_name": "Indian Renewable Energy Development Agency Limited",
+      "subsector": "infrastructure_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Indiabulls Housing Finance",
+      "full_name": "Indiabulls Housing Finance Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "JM Financial",
+      "full_name": "JM Financial Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "L&T Finance",
+      "full_name": "L&T Finance Limited",
+      "subsector": "infrastructure_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "LIC Housing Finance",
+      "full_name": "LIC Housing Finance Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Lakshmi Vilas Bank",
+      "full_name": "Lakshmi Vilas Bank Limited",
+      "subsector": "special_situations",
+      "status": "merged",
+      "n_peers": 43,
+      "n_intra_peers": 2,
+      "n_cross_peers": 41
+    },
+    {
+      "name": "Mahindra Finance",
+      "full_name": "Mahindra & Mahindra Financial Services Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "Manappuram Finance",
+      "full_name": "Manappuram Finance Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "Muthoot Finance",
+      "full_name": "Muthoot Finance Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "PMC Bank",
+      "full_name": "Punjab & Maharashtra Co-operative Bank",
+      "subsector": "special_situations",
+      "status": "merged",
+      "n_peers": 43,
+      "n_intra_peers": 2,
+      "n_cross_peers": 41
+    },
+    {
+      "name": "PNB Housing Finance",
+      "full_name": "PNB Housing Finance Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Piramal Enterprises",
+      "full_name": "Piramal Enterprises Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "Power Finance Corporation",
+      "full_name": "Power Finance Corporation Limited",
+      "subsector": "infrastructure_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "REC Limited",
+      "full_name": "REC Limited",
+      "subsector": "infrastructure_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Reliance Capital",
+      "full_name": "Reliance Capital Limited",
+      "subsector": "infrastructure_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Reliance Home Finance",
+      "full_name": "Reliance Home Finance Limited",
+      "subsector": "infrastructure_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Repco Home Finance",
+      "full_name": "Repco Home Finance Limited",
+      "subsector": "housing_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "SREI Equipment Finance",
+      "full_name": "SREI Equipment Finance Limited",
+      "subsector": "infrastructure_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "SREI Infrastructure Finance",
+      "full_name": "SREI Infrastructure Finance Limited",
+      "subsector": "infrastructure_finance",
+      "status": "defaulted",
+      "n_peers": 43,
+      "n_intra_peers": 9,
+      "n_cross_peers": 34
+    },
+    {
+      "name": "Shriram Finance",
+      "full_name": "Shriram Finance Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "Spandana Sphoorty",
+      "full_name": "Spandana Sphoorty Financial Limited",
+      "subsector": "microfinance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 5,
+      "n_cross_peers": 38
+    },
+    {
+      "name": "Sundaram Finance",
+      "full_name": "Sundaram Finance Limited",
+      "subsector": "vehicle_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 2,
+      "n_cross_peers": 41
+    },
+    {
+      "name": "TVS Credit Services",
+      "full_name": "TVS Credit Services Limited",
+      "subsector": "vehicle_finance",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 2,
+      "n_cross_peers": 41
+    },
+    {
+      "name": "Tata Capital",
+      "full_name": "Tata Capital Financial Services Limited",
+      "subsector": "diversified_nbfc",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 11,
+      "n_cross_peers": 32
+    },
+    {
+      "name": "YES Bank",
+      "full_name": "YES Bank Limited",
+      "subsector": "special_situations",
+      "status": "active",
+      "n_peers": 43,
+      "n_intra_peers": 2,
+      "n_cross_peers": 41
+    }
+  ],
+  "subsectors": {
+    "housing_finance": 10,
+    "infrastructure_finance": 10,
+    "diversified_nbfc": 12,
+    "microfinance": 6,
+    "vehicle_finance": 3,
+    "special_situations": 3
+  },
+  "n_entities": 44,
+  "generated_at": "2026-02-19T12:35:13.034170"
+}

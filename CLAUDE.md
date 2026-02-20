@@ -21,10 +21,12 @@ Building a fine-tuned LLM to extract credit risk deterioration signals from news
 - `src/data/` — scrapers, cleaners, labelers
 - `src/training/` — fine-tuning scripts, evaluation
 - `src/signals/` — inference, contagion logic, scoring
-- `src/dashboard/` — React frontend
+- `src/dashboard/` — Streamlit dashboard (5 views, deployed to Streamlit Cloud)
 - `src/api/` — FastAPI backend
+- `docs/pipeline-overview/` — GitHub Pages pipeline overview (React, CDN-based)
 - `data/raw/` — raw scraped data (gitignored)
 - `data/processed/` — cleaned, labeled data
+- `data/dashboard/` — pre-computed parquet/JSON for dashboard (tracked, ~2.2 MB)
 - `data/models/` — saved model weights (gitignored)
 - `configs/` — YAML config files
 - `notebooks/` — Jupyter for exploration only, never production code
@@ -68,8 +70,8 @@ python -m src.data.scrape_ratings --all
 # Start API server (Phase 4)
 uvicorn src.api.main:app --reload
 
-# Start frontend (Phase 4)
-cd src/dashboard && npm run dev
+# Start Streamlit dashboard locally (Phase 4)
+streamlit run src/dashboard/app.py
 
 # Run model inference (on Colab, not local — Phase 2+)
 python -m src.signals.predict --model data/models/latest --input data/processed/test.jsonl
@@ -78,11 +80,17 @@ python -m src.signals.predict --model data/models/latest --input data/processed/
 ## Current Phase
 Phase 4 — Dashboard & Demo. Phases 0–3 COMPLETE.
 
-**WHERE WE ARE NOW:** Phase 4 COMPLETE — Streamlit dashboard with 5 views.
-`streamlit run src/dashboard/app.py` launches the full dashboard. Data from 6 pre-computed
-files in `data/dashboard/` (regenerate with `python -m src.signals.export_dashboard_data`).
+**WHERE WE ARE NOW:** Phase 4 COMPLETE — Streamlit dashboard with 5 views, deployed.
+`streamlit run src/dashboard/app.py` launches locally. Data from 6 pre-computed files in
+`data/dashboard/` (tracked in git, ~2.2 MB; regenerate with `python -m src.signals.export_dashboard_data`).
 Views: Entity Timeline (v3), Sector Heatmap, Contagion Network, Signal Feed, Alert Dashboard.
 2,362 lines across 9 files. 164 tests pass.
+
+**Deployments:**
+- **Pipeline Overview (GitHub Pages):** `https://spiffler33.github.io/india-credit-signals/pipeline-overview/`
+- **Live Dashboard (Streamlit Cloud):** pointed at `src/dashboard/app.py` on `main` branch
+- `requirements.txt` at root = lean dashboard deps only (Streamlit Cloud reads this, not pyproject.toml)
+- `data/dashboard/` files tracked in git for Streamlit Cloud access
 
 **Project direction:** This is being built as a **real work tool** — not just a contest entry.
 Goal: demonstrate to global head that LLM-based credit signal extraction + sector contagion
@@ -91,8 +99,9 @@ sectors. Priority order: ~~(1) contagion layer~~, ~~(2) contagion v2 fix~~,
 ~~(3) dashboard/demo~~. Remaining: (1) KOP documentation, (2) inference pipeline.
 Post-demo: funding profile edges + asymmetric weights (see CONTAGION_PLAN.md v2 items 3-4).
 
-**Immediate next action:** Discuss priorities with user — KOP documentation (`docs/`),
-inference pipeline (Phase 5.1), or contagion improvements (funding edges + asymmetric weights).
+**Immediate next action:** KOP documentation (`docs/`), inference pipeline (Phase 5.1),
+or contagion improvements (funding edges + asymmetric weights). Deployments done — archive
+standalone repos (credit-signal-pipeline, credit-signal-dashboard) when confirmed working.
 
 **Data sourcing workflow:** Complex scraping tasks are done in a separate project at
 `/Users/coddiwomplers/Desktop/Python/data_scraping/`. Output CSVs are imported into this project.

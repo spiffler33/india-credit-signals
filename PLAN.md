@@ -646,6 +646,24 @@ See `DASHBOARD_PLAN.md` → Demo Script section for the full 6-step walkthrough.
 Key beats: DHFL 160d lead time → Can Fin contagion-only → sector heatmap animation →
 network graph → alert precision → "your DS team can replicate this for any sector."
 
+### 4.6 Deployment ✅ DONE
+All demo assets consolidated into the main `india-credit-signals` repo.
+
+**GitHub Pages — Pipeline Overview:**
+- URL: `https://spiffler33.github.io/india-credit-signals/pipeline-overview/`
+- Source: `docs/pipeline-overview/index.html` (standalone React page, CDN-based, no build step)
+- Serves from `docs/` directory on `main` branch
+- Content: Interactive 3-tab overview (How It Works, Why Not Real-Time AI?, Cross-Sector Portability)
+
+**Streamlit Cloud — Live Dashboard:**
+- URL: configured in Streamlit Cloud to point at `spiffler33/india-credit-signals`, main file `src/dashboard/app.py`
+- Data: `data/dashboard/*.parquet` + `*.json` files tracked in git (~2.2 MB total)
+- Dependencies: `requirements.txt` (lean, dashboard-only — excludes heavy ML deps)
+- To regenerate data: `python -m src.signals.export_dashboard_data` → commit updated files
+
+**Standalone repos archived:** `credit-signal-pipeline` and `credit-signal-dashboard` were
+throwaway repos used during initial deployment. Assets now live in the main repo.
+
 ---
 
 ## Phase 5: Production & Extension (Future)
