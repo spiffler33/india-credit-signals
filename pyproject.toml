@@ -25,28 +25,33 @@ dependencies = [
     "httpx>=0.27.0",
     # tenacity: Retry logic for flaky network requests (scrapers WILL fail, this handles retries)
     "tenacity>=8.2.0",
+    # beautifulsoup4: HTML parsing for scraping rating agency pages
+    "beautifulsoup4>=4.12.0",
+    # lxml: Fast HTML/XML parser backend — BS4 uses it under the hood for speed
+    "lxml>=5.0.0",
     # pandas: Data manipulation (you know this from finance — DataFrames)
     "pandas>=2.2.0",
     # polars: Faster DataFrame library for large datasets (10-100x faster than pandas on big data)
     # No [rtcompat] needed — ARM Python has native wheels with full SIMD support
     "polars>=1.0.0",
-
     # --- API & Serving ---
     # fastapi: Modern Python web framework for the API backend
     "fastapi>=0.115.0",
     # uvicorn: ASGI server that runs FastAPI (like the engine under the API hood)
     "uvicorn>=0.29.0",
-
     # --- Config & Logging ---
     # pyyaml: Reads YAML config files (human-readable config, not hardcoded values)
     "pyyaml>=6.0",
     # loguru: Better logging than Python's built-in (structured, colored, easy to use)
     "loguru>=0.7.0",
-
     # --- Utilities ---
     # torch: PyTorch — the deep learning framework everything else is built on
     # No pin needed — latest torch has excellent M1 MPS support
     "torch>=2.5.0",
+    "anthropic>=0.79.0",
+    "streamlit>=1.54.0",
+    "plotly>=6.5.2",
+    "pyarrow>=23.0.0",
 ]
 
 [project.optional-dependencies]

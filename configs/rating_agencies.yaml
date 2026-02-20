@@ -1,0 +1,93 @@
+# WHY THIS: Each Indian rating agency has a different website architecture.
+# CRISIL and ICRA are JS-rendered SPAs — pure httpx won't work.
+# We define scrape strategies per agency so the scraper knows what to try
+# and when to fall back to the seed dataset.
+
+# 🎓 CONCEPT: "Scrape strategy" matters because Indian rating agency websites
+# are NOT like Bloomberg or Reuters. They're built with Angular/React SPAs
+# that render data client-side. You can't just GET the HTML and parse it —
+# the HTML comes back nearly empty, with JS filling in the data later.
+# Options: (1) Playwright (headless browser), (2) reverse-engineer their API,
+# (3) accept the seed dataset as primary and extend opportunistically.
+
+agencies:
+
+  crisil:
+    name: "CRISIL"
+    full_name: "Credit Rating Information Services of India Limited"
+    base_url: "https://www.crisil.com"
+    rating_list_url: "https://www.crisil.com/en/home/our-analysis/ratings/rating-list.html"
+    scrape_strategy: "api_probe"  # Try reverse-engineering their internal API first
+    # CRISIL uses an internal API at /content/crisil/en/home/our-analysis/ratings/
+    # We'll try to hit it directly; if blocked, fall back to seed data
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "application/json, text/html"
+    rate_limit_seconds: 3.0  # Be polite — 1 request per 3 seconds
+    max_retries: 3
+    notes: "JS-rendered SPA. API probe may work for search endpoint."
+
+  icra:
+    name: "ICRA"
+    full_name: "ICRA Limited"
+    base_url: "https://www.icra.in"
+    rating_list_url: "https://www.icra.in/Rationale/Search"
+    scrape_strategy: "api_probe"
+    # ICRA has a search form that POSTs to /Rationale/Search with entity name
+    # May be possible to submit form data via httpx
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "text/html, application/json"
+    rate_limit_seconds: 3.0
+    max_retries: 3
+    notes: "Form-based search. May respond to POST with entity name."
+
+  care:
+    name: "CARE"
+    full_name: "CARE Ratings Limited (CareEdge)"
+    base_url: "https://www.careedge.in"
+    rating_list_url: "https://www.careedge.in/ratings/rating-rationale"
+    scrape_strategy: "api_probe"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "text/html, application/json"
+    rate_limit_seconds: 3.0
+    max_retries: 3
+    notes: "CareEdge rebrand in 2022. Newer site may have API endpoints."
+
+  india_ratings:
+    name: "India Ratings"
+    full_name: "India Ratings and Research (Fitch Group)"
+    base_url: "https://www.indiaratings.co.in"
+    rating_list_url: "https://www.indiaratings.co.in/PressRelease"
+    scrape_strategy: "api_probe"
+    headers:
+      User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      Accept: "text/html, application/json"
+    rate_limit_seconds: 3.0
+    max_retries: 3
+    notes: "Fitch subsidiary. Press release page may be simpler to parse."
+
+# 📐 DECISION: scrape_strategy options
+#   "api_probe" — Try to find and hit internal JSON API endpoints
+#   "html_parse" — Direct HTML parsing with BeautifulSoup (works if server-rendered)
+#   "seed_only" — Don't even try scraping, rely entirely on seed dataset
+#   "playwright" — Full headless browser (not implemented in Phase 1.1)
+#
+# We start with api_probe for all agencies. If they fail (likely for most),
+# the scraper gracefully falls back to seed data. No wasted time on Playwright
+# unless we actually need to extend the dataset beyond seed coverage.
+
+# Output settings
+output:
+  raw_file: "data/raw/rating_actions.csv"
+  columns:
+    - "entity"
+    - "agency"
+    - "date"
+    - "action_type"
+    - "from_rating"
+    - "to_rating"
+    - "rationale_url"
+    - "notes"
+    - "source"  # "seed" or "scraped"

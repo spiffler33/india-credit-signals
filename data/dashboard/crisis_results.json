@@ -1,0 +1,174 @@
+[
+  {
+    "crisis_key": "ilfs_dhfl_2018",
+    "crisis_name": "IL&FS / DHFL Housing Finance Crisis",
+    "start_date": "2018-06-01",
+    "end_date": "2020-06-30",
+    "n_signals": 7958,
+    "n_entities": 160,
+    "source_results": [
+      {
+        "entity": "IL&FS",
+        "n_days_with_score": 649,
+        "total_direct": 119.6,
+        "peak_direct": 14.5,
+        "first_signal_date": "2018-06-04"
+      },
+      {
+        "entity": "DHFL",
+        "n_days_with_score": 649,
+        "total_direct": 1267.5,
+        "peak_direct": 65.5,
+        "first_signal_date": "2018-06-04"
+      }
+    ],
+    "target_results": [
+      {
+        "entity": "Indiabulls Housing Finance",
+        "is_control": false,
+        "first_action": "2019-08-30",
+        "first_breach_date": "2018-09-21",
+        "lead_time_days": 343,
+        "direct_only_lead_time": 336,
+        "lead_time_improvement": 7,
+        "peak_score": 25.35,
+        "peak_contagion": 24.75,
+        "n_warning_breaches": 0
+      },
+      {
+        "entity": "PNB Housing Finance",
+        "is_control": false,
+        "first_action": "2020-02-21",
+        "first_breach_date": "2018-09-28",
+        "lead_time_days": 511,
+        "direct_only_lead_time": 28,
+        "lead_time_improvement": 483,
+        "peak_score": 22.65,
+        "peak_contagion": 22.65,
+        "n_warning_breaches": 0
+      },
+      {
+        "entity": "Can Fin Homes",
+        "is_control": false,
+        "first_action": "2019-05-06",
+        "first_breach_date": "2018-09-28",
+        "lead_time_days": 220,
+        "direct_only_lead_time": null,
+        "lead_time_improvement": 220,
+        "peak_score": 9.78,
+        "peak_contagion": 9.78,
+        "n_warning_breaches": 0
+      },
+      {
+        "entity": "Piramal Enterprises",
+        "is_control": false,
+        "first_action": "2019-05-07",
+        "first_breach_date": "2018-10-09",
+        "lead_time_days": 210,
+        "direct_only_lead_time": null,
+        "lead_time_improvement": 210,
+        "peak_score": 6.81,
+        "peak_contagion": 6.81,
+        "n_warning_breaches": 0
+      },
+      {
+        "entity": "Reliance Home Finance",
+        "is_control": false,
+        "first_action": "2019-04-03",
+        "first_breach_date": "2018-09-09",
+        "lead_time_days": 206,
+        "direct_only_lead_time": 194,
+        "lead_time_improvement": 12,
+        "peak_score": 18.29,
+        "peak_contagion": 15.0,
+        "n_warning_breaches": 0
+      },
+      {
+        "entity": "Cholamandalam Investment",
+        "is_control": true,
+        "first_action": null,
+        "first_breach_date": null,
+        "lead_time_days": null,
+        "direct_only_lead_time": null,
+        "lead_time_improvement": null,
+        "peak_score": 6.81,
+        "peak_contagion": 6.81,
+        "n_warning_breaches": 47
+      },
+      {
+        "entity": "Bajaj Finance",
+        "is_control": true,
+        "first_action": null,
+        "first_breach_date": null,
+        "lead_time_days": null,
+        "direct_only_lead_time": null,
+        "lead_time_improvement": null,
+        "peak_score": 7.8,
+        "peak_contagion": 7.2,
+        "n_warning_breaches": 60
+      }
+    ]
+  },
+  {
+    "crisis_key": "srei_infra_2019",
+    "crisis_name": "SREI / Reliance Capital Infrastructure Crisis",
+    "start_date": "2019-06-01",
+    "end_date": "2022-01-31",
+    "n_signals": 7513,
+    "n_entities": 161,
+    "source_results": [
+      {
+        "entity": "Reliance Capital",
+        "n_days_with_score": 755,
+        "total_direct": 294.55,
+        "peak_direct": 25.5,
+        "first_signal_date": "2019-06-02"
+      },
+      {
+        "entity": "SREI Infrastructure Finance",
+        "n_days_with_score": 755,
+        "total_direct": 58.4,
+        "peak_direct": 4.5,
+        "first_signal_date": "2019-06-02"
+      }
+    ],
+    "target_results": [
+      {
+        "entity": "SREI Equipment Finance",
+        "is_control": false,
+        "first_action": "2020-06-03",
+        "first_breach_date": "2019-06-13",
+        "lead_time_days": 356,
+        "direct_only_lead_time": 244,
+        "lead_time_improvement": 112,
+        "peak_score": 11.61,
+        "peak_contagion": 10.72,
+        "n_warning_breaches": 0
+      },
+      {
+        "entity": "L&T Finance",
+        "is_control": true,
+        "first_action": null,
+        "first_breach_date": null,
+        "lead_time_days": null,
+        "direct_only_lead_time": null,
+        "lead_time_improvement": null,
+        "peak_score": 13.85,
+        "peak_contagion": 10.72,
+        "n_warning_breaches": 134
+      },
+      {
+        "entity": "Bajaj Finance",
+        "is_control": true,
+        "first_action": null,
+        "first_breach_date": null,
+        "lead_time_days": null,
+        "direct_only_lead_time": null,
+        "lead_time_improvement": null,
+        "peak_score": 7.4,
+        "peak_contagion": 4.49,
+        "n_warning_breaches": 21
+      }
+    ]
+  }
+]

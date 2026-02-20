@@ -1,0 +1,49 @@
+# WHY THIS: Single config file for all backtest parameters.
+# Separating these from code makes it easy to re-run with different windows
+# or thresholds without touching Python. Critical for reproducibility.
+
+# --- Rating action types that count as "negative events" for backtest ---
+# Downgrades and defaults are unambiguous. Watchlist/outlook negatives are
+# weaker signals but still indicate credit deterioration flagged by agencies.
+negative_actions:
+  - downgrade
+  - default
+  - watchlist_negative
+  - outlook_negative
+
+# --- Lead time analysis ---
+# How far back (in days) before a rating action to look for model signals.
+# 180 days = 6 months — matches our original label window design.
+lookback_days: 180
+
+# --- Alert threshold grid search ---
+# We sweep N (min signals), M (window size), K (lookahead) to find the
+# Pareto frontier of precision vs recall.
+alert_thresholds:
+  n_signals: [1, 2, 3, 5]         # Min deterioration signals to trigger alert
+  window_days: [14, 30, 60, 90]    # Rolling window size (days)
+  lookahead_days: [90, 180]        # How far forward to check for rating action
+
+# --- Entity matching ---
+# Rating actions CSV uses full entity names; article predictions may use
+# shorter forms. Aliases map prediction entity names → rating action names.
+entity_aliases:
+  "DHFL":
+    - "DHFL"
+    - "Dewan Housing"
+  "Reliance Capital":
+    - "Reliance Capital"
+  "Cholamandalam":
+    - "Cholamandalam"
+  "Indiabulls Housing Finance":
+    - "Indiabulls Housing Finance"
+    - "Indiabulls Housing"
+
+# --- Data paths ---
+paths:
+  rating_actions: "data/raw/rating_actions_sourced.csv"
+  holdout_predictions: "data/processed/finetuned_holdout_outputs.jsonl"
+  holdout_source: "data/processed/entity_holdout.jsonl"
+  test_predictions: "data/processed/finetuned_test_outputs.jsonl"
+  test_source: "data/processed/test.jsonl"
+  report_output: "reports/phase2_4_backtest_results.md"

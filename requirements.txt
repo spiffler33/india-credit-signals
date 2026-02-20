@@ -1,0 +1,11 @@
+# Streamlit Cloud deployment dependencies (dashboard only).
+# Streamlit Cloud reads this BEFORE pyproject.toml — keeps deploys fast
+# by excluding heavy ML deps (torch, transformers, peft ~4GB) that the
+# dashboard never imports.
+#
+# For local dev, use `uv sync` which reads pyproject.toml instead.
+
+streamlit>=1.54.0
+plotly>=6.5.2
+pandas>=2.2.0
+pyarrow>=23.0.0

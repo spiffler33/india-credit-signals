@@ -1,0 +1,327 @@
+# WHY THIS: Centralizes ALL prompts, model choices, thresholds, and sampling
+# keywords for the LLM labeling pipeline. Changing a prompt or switching models
+# means editing one YAML — not hunting through Python files.
+# Config-driven pipelines are standard in ML ops because experiments need
+# reproducible, diffable parameter sets.
+
+# --- Model Selection ---
+# Three models for three phases: expensive/accurate for calibration + audit,
+# cheap/fast for the 17K-article bulk pass.
+models:
+  calibration: claude-sonnet-4-5-20250929   # Phase 1: 300 articles, ~$1.50
+  bulk: claude-haiku-4-5-20251001           # Phase 2: 17K articles, ~$5
+  audit: claude-sonnet-4-5-20250929         # Phase 3: ~5K re-checks, ~$25
+
+# --- API Rate Limiting ---
+# Anthropic rate limits vary by plan. These are conservative defaults.
+# max_concurrent = semaphore size (parallel in-flight requests).
+# requests_per_minute = sliding window limit (sleep if exceeded).
+api:
+  max_concurrent: 10
+  requests_per_minute: 50
+  max_retries: 3
+  retry_base_delay: 2.0   # seconds, exponential backoff: 2, 4, 8
+
+# --- Text Handling ---
+# GDELT article bodies average ~2,646 chars. First paragraphs contain the
+# signal 90% of the time. Truncating at 3,000 chars keeps costs down while
+# covering 75% of articles in full.
+text_truncation:
+  max_chars: 3000
+
+# --- Calibration Sampling ---
+# Phase 1 selects 300 deliberate articles: 100 likely-credit, 100 likely-noise,
+# 100 ambiguous. This ensures we see the full spectrum before bulk labeling.
+sampling:
+  total: 300
+  per_bucket: 100
+  max_per_entity: 15   # Prevents Shriram Finance domination
+
+  # Keywords to identify "likely credit-relevant" articles
+  credit_keywords:
+    - default
+    - downgrade
+    - npa
+    - debt restructur
+    - loan loss
+    - provision
+    - impairment
+    - slippage
+    - delinquen
+    - write-off
+    - writeoff
+    - credit watch
+    - creditwatch
+    - liquidity crisis
+    - cash crunch
+    - repayment
+    - moratorium
+    - insolvency
+    - nclt
+    - ibc
+    - fraud
+    - scam
+    - rbi action
+    - penalty
+    - gnpa
+    - nnpa
+    - stressed
+    - credit rating
+    - rating action
+    - downgraded
+    - upgraded
+
+  # Keywords to identify "likely noise" articles
+  noise_keywords:
+    - award
+    - csr
+    - sports
+    - cricket
+    - sponsorship
+    - stock tip
+    - buy recommendation
+    - sell recommendation
+    - target price
+    - share price
+    - ipo allotment
+    - dividend declared
+    - brand ambassador
+    - entertainment
+    - lifestyle
+    - diwali offer
+    - festival
+    - philanthropy
+    - marathon
+
+# --- Prompt Design ---
+# System prompt anchors the model as a credit analyst. The boundary rules are
+# CRITICAL — they prevent the model from over-labeling general business news
+# as credit-relevant. These were designed based on GDELT noise patterns.
+prompt:
+  system: |
+    You are a senior credit analyst at a rating agency specializing in Indian
+    Non-Banking Financial Companies (NBFCs). Your task is to assess whether a
+    news article contains signals relevant to an NBFC's CREDIT QUALITY — meaning
+    its ability to service debt and maintain financial stability.
+
+    BOUNDARY RULES (follow strictly):
+    - General business expansion is NOT credit-relevant UNLESS it implies
+      leverage increase, funding pressure, or concentration risk.
+    - Management changes are NOT credit-relevant UNLESS tied to governance
+      concerns, financial distress, or regulatory action.
+    - Regulatory actions ARE credit-relevant if they restrict business
+      operations, capital adequacy, or asset classification.
+    - Revenue/profit growth is NOT credit-relevant UNLESS it specifically
+      affects debt servicing capacity or asset quality.
+    - Stock price movements alone are NOT credit-relevant.
+    - Awards, CSR activities, and brand marketing are NEVER credit-relevant.
+    - Legal/court cases ARE credit-relevant if they involve debt recovery,
+      insolvency proceedings, or large financial penalties.
+    - Asset sales or stake sales during periods of financial stress should be
+      labeled as deterioration (-1) — the need to sell signals distress even if
+      the transaction provides temporary liquidity relief.
+
+    OUTPUT FORMAT: Respond with ONLY a JSON object (no markdown, no explanation):
+    {
+      "credit_relevant": 0 or 1,
+      "signal_direction": -1 (deterioration), 0 (neutral/mixed), or 1 (improvement),
+      "signal_type": "liquidity"|"asset_quality"|"regulatory"|"contagion"|"governance"|"funding"|"operational"|"other",
+      "sector_wide": 0 or 1,
+      "confidence": "low"|"medium"|"high",
+      "reasoning": "One sentence explaining your assessment"
+    }
+
+    If credit_relevant=0, set signal_direction=0, signal_type="other",
+    sector_wide=0, confidence="high".
+
+  user_template: |
+    Analyze this article about {entity} for credit risk signals.
+
+    TITLE: {title}
+    DATE: {date}
+    SOURCE: {source}
+
+    ARTICLE TEXT:
+    {text}
+
+  # Few-shot examples — populated after Phase 1 calibration review.
+  # Each example has: input (title+text snippet) and expected output JSON.
+  # 11 examples covering: 5 signal types (deterioration), 4 negatives (boundary
+  # rules), 2 improvement signals. Designed to teach Haiku the exact boundaries.
+  few_shot_examples:
+    # --- DETERIORATION EXAMPLES (-1) ---
+
+    # 1. ASSET_QUALITY: NPA exposure with specific numbers
+    - input: >
+        PFC power projects with 14,000 Mw capacity to go down insolvency alley.
+        Around 14,000 Mw of projects, involving Rs 300 bn of PFC's loan book,
+        under IBC route and over half may have to be written off. PFC could see
+        11.4% of its loan book getting into insolvency.
+      output:
+        credit_relevant: 1
+        signal_direction: -1
+        signal_type: asset_quality
+        sector_wide: 0
+        confidence: high
+        reasoning: "11.4% of PFC's loan book (Rs 300B across 14,115 MW projects) entering insolvency with over half facing write-offs represents severe asset quality deterioration."
+
+    # 2. LIQUIDITY: Defensive pre-payment reveals underlying stress
+    - input: >
+        Indiabulls Housing Finance offers to pre-pay NCDs maturing in Nov/Dec.
+        Company maintains 20% cash-to-assets ratio. Meanwhile, Delhi HC hearing
+        PIL alleging fund diversion and RBI rejected proposed merger with
+        Lakshmi Vilas Bank.
+      output:
+        credit_relevant: 1
+        signal_direction: -1
+        signal_type: liquidity
+        sector_wide: 0
+        confidence: high
+        reasoning: "Pre-mature NCD redemption amid PIL allegations and rejected merger suggests defensive liquidity management to prevent refinancing stress, indicating underlying funding pressure."
+
+    # 3. FUNDING: Sector-wide bond yield surge
+    - input: >
+        Yields on NBFC bonds surging. DHFL bonds traded at 50-51% yield vs
+        38-39% a month ago. Following IL&FS defaults, NBFCs' funding costs have
+        surged 150-200 bps on average. Allegations against Indiabulls Housing
+        adding to market stress.
+      output:
+        credit_relevant: 1
+        signal_direction: -1
+        signal_type: funding
+        sector_wide: 1
+        confidence: high
+        reasoning: "NBFC bond yields surging 150-200 bps amid IL&FS contagion and Indiabulls allegations signals severe sector-wide funding stress."
+
+    # 4. GOVERNANCE: RBI forces out CEO (not routine succession)
+    - input: >
+        YES Bank CEO Rana Kapoor reiterates commitment after RBI trimmed his
+        term and asked him to step down by January 2019. Board set up search
+        committee for successor. YES Bank shares fell 9.72%.
+      output:
+        credit_relevant: 1
+        signal_direction: -1
+        signal_type: governance
+        sector_wide: 0
+        confidence: high
+        reasoning: "RBI curtailing the CEO's tenure mid-term signals regulatory concerns about governance and leadership, indicating potential underlying issues affecting credit quality."
+
+    # 5. CONTAGION: Moody's systemic warning
+    - input: >
+        Moody's warns pressure on Indian finance companies continues to build.
+        Banks heavily exposed to NBFCs. Indian banks failed Moody's stress test
+        on capital. Government considering emergency fund to buy stressed NBFC
+        assets following IL&FS and DHFL defaults.
+      output:
+        credit_relevant: 1
+        signal_direction: -1
+        signal_type: contagion
+        sector_wide: 1
+        confidence: high
+        reasoning: "Moody's systemic warning citing NBFC contagion to banks, failed stress tests, and government emergency measures indicates acute sectoral credit distress."
+
+    # --- NOT CREDIT-RELEVANT EXAMPLES (boundary rules) ---
+
+    # 6. STOCK PRICE: Trading metrics are not credit signals
+    - input: >
+        Shriram Finance stock hit high of Rs 3088.55 and low of Rs 3000.00.
+        ROE at 15.04%. Traded volume 10,000 shares. 52-week high Rs 3652.15,
+        52-week low Rs 1933.70. Beta 1.6856.
+      output:
+        credit_relevant: 0
+        signal_direction: 0
+        signal_type: other
+        sector_wide: 0
+        confidence: high
+        reasoning: "Article contains only stock price movements and trading metrics with no information on debt servicing, asset quality, or funding conditions."
+
+    # 7. ROUTINE MANAGEMENT: Normal succession is not credit-relevant
+    - input: >
+        Parminder Chopra takes charge as Director (Finance) at PFC, succeeding
+        NB Gupta who superannuated on June 30. Chopra was previously Executive
+        Director (Finance) at PFC.
+      output:
+        credit_relevant: 0
+        signal_direction: 0
+        signal_type: other
+        sector_wide: 0
+        confidence: high
+        reasoning: "Routine management succession with experienced internal candidate; no governance crisis, distress, or credit quality impact."
+
+    # 8. AWARDS/CSR: Recognition is never credit-relevant
+    - input: >
+        IIFL Home Finance received Best Performing Primary Lending Institution
+        under CLSS award from Ministry of Housing. Recognition for supporting
+        PMAY Housing for All Mission.
+      output:
+        credit_relevant: 0
+        signal_direction: 0
+        signal_type: other
+        sector_wide: 0
+        confidence: high
+        reasoning: "Government award for housing scheme participation provides no information about debt servicing capacity or financial stability."
+
+    # 9. BUSINESS EXPANSION: Growth plans are not credit signals
+    - input: >
+        Tata Capital Financial Services closely monitoring P2P lending sector,
+        may enter the space. Evaluating leveraging retail strength of Tata group
+        via Croma, Tata Sky, Titan. AUM registered 15% CAGR over 3 years. Set
+        to raise Rs 7,500 crore via maiden NCD issue.
+      output:
+        credit_relevant: 0
+        signal_direction: 0
+        signal_type: other
+        sector_wide: 0
+        confidence: high
+        reasoning: "Strategic expansion plans and product exploration are business development activities without current impact on debt servicing or credit fundamentals."
+
+    # --- IMPROVEMENT EXAMPLES (+1) ---
+
+    # 10. ASSET_QUALITY IMPROVEMENT: Rating upgrade with specific metrics
+    - input: >
+        CARE Ratings upgraded Manappuram Finance from AA- to AA with stable
+        outlook. Upgrade factors in significant improvement in financial
+        performance, AUM growth in gold loans and microfinance, focus on shorter
+        tenure loans reducing under-recovery, declining cost of borrowing.
+      output:
+        credit_relevant: 1
+        signal_direction: 1
+        signal_type: asset_quality
+        sector_wide: 0
+        confidence: high
+        reasoning: "Rating upgrade from AA- to AA citing improved financial performance, AUM growth, reduced under-recovery, and declining borrowing costs indicates strengthened credit profile."
+
+    # 11. FUNDING IMPROVEMENT: Capital raise addressing post-crisis needs
+    - input: >
+        YES Bank's Rs 15,000 crore FPO concluded with 93% subscription.
+        Received 847.82 crore bids against 909.98 crore shares. Proceeds to
+        meet capital requirements for growth following RBI intervention and
+        near-collapse.
+      output:
+        credit_relevant: 1
+        signal_direction: 1
+        signal_type: funding
+        sector_wide: 0
+        confidence: high
+        reasoning: "Successfully raising Rs 14,000 crore provides critical capital to meet regulatory requirements and strengthen debt servicing capacity post-crisis."
+
+# --- Audit Selection Criteria ---
+# Phase 3: Which Haiku labels get re-checked by Sonnet?
+# Any article that is "interesting" (credit-relevant, has a signal, low confidence,
+# or had a parse error) gets the more expensive model's opinion.
+audit:
+  select_if_any:
+    - credit_relevant == 1
+    - signal_direction != 0
+    - confidence == "low"
+    - parse_error is not null
+
+# --- Output Paths ---
+paths:
+  calibration_sample: data/processed/labels_calibration_sample.csv
+  calibration_labels: data/processed/labels_calibration.jsonl
+  bulk_labels: data/processed/labels_bulk.jsonl
+  audit_candidates: data/processed/audit_candidates.csv
+  audit_labels: data/processed/labels_audit.jsonl
+  final_labels_jsonl: data/processed/labels_final.jsonl
+  final_labels_csv: data/processed/labels_final.csv
